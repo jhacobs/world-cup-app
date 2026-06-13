@@ -92,6 +92,13 @@ Map<int, String> _providerIdsByAppId(
     final appId = _requiredString(item, 'id');
     final providerId = _optionalInt(item, 'providerId');
     if (providerId != null) {
+      final existingAppId = mappings[providerId];
+      if (existingAppId != null) {
+        throw FormatException(
+          'Duplicate baseline providerId in $key: providerId $providerId '
+          'already maps to $existingAppId, duplicate maps to $appId.',
+        );
+      }
       mappings[providerId] = appId;
     }
   }

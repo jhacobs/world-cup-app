@@ -84,7 +84,13 @@ void main() {
             },
           ],
         }),
-        throwsFormatException,
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('No baseline match found for provider match id 497999'),
+          ),
+        ),
       );
     });
 
@@ -106,7 +112,62 @@ void main() {
             },
           ],
         }),
-        throwsFormatException,
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('Unknown football-data status "DELAYED"'),
+          ),
+        ),
+      );
+    });
+
+    test('throws when baseline match providerId is duplicated', () {
+      final baseline = _baseline();
+      baseline['matches'] = [
+        {'id': 'match-001', 'providerId': 497000},
+        {'id': 'match-duplicate', 'providerId': 497000},
+      ];
+
+      expect(
+        () => FootballDataMapper.fromBaseline(baseline),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('matches'),
+              contains('497000'),
+              contains('match-001'),
+              contains('match-duplicate'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('throws when baseline team providerId is duplicated', () {
+      final baseline = _baseline();
+      baseline['teams'] = [
+        {'id': 'mexico', 'providerId': 100},
+        {'id': 'duplicate-mexico', 'providerId': 100},
+        {'id': 'south-africa', 'providerId': 200},
+      ];
+
+      expect(
+        () => FootballDataMapper.fromBaseline(baseline),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('teams'),
+              contains('100'),
+              contains('mexico'),
+              contains('duplicate-mexico'),
+            ),
+          ),
+        ),
       );
     });
   });
