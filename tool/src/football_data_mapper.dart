@@ -2,18 +2,22 @@ class FootballDataMapper {
   FootballDataMapper._({
     required Map<int, String> matchIdsByProviderId,
     required Map<int, String> teamIdsByProviderId,
+    required Map<String, String> groupIdsByProviderName,
   }) : _matchIdsByProviderId = Map.unmodifiable(matchIdsByProviderId),
-       _teamIdsByProviderId = Map.unmodifiable(teamIdsByProviderId);
+       _teamIdsByProviderId = Map.unmodifiable(teamIdsByProviderId),
+       _groupIdsByProviderName = Map.unmodifiable(groupIdsByProviderName);
 
   factory FootballDataMapper.fromBaseline(Map<String, Object?> baseline) {
     return FootballDataMapper._(
       matchIdsByProviderId: _providerIdsByAppId(baseline, 'matches'),
       teamIdsByProviderId: _providerIdsByAppId(baseline, 'teams'),
+      groupIdsByProviderName: _providerGroupNamesByAppId(baseline),
     );
   }
 
   final Map<int, String> _matchIdsByProviderId;
   final Map<int, String> _teamIdsByProviderId;
+  final Map<String, String> _groupIdsByProviderName;
 
   Map<String, Object?> mapMatchesResponse(Map<String, Object?> response) {
     return {
@@ -26,6 +30,17 @@ class FootballDataMapper {
       ).map(_mapMatch).toList(growable: false),
       'groupStandings': <Object?>[],
     };
+  }
+
+  List<Map<String, Object?>> mapStandingsResponse(
+    Map<String, Object?> response,
+  ) {
+    final standings = _optionalObjectList(response, 'standings');
+    if (standings == null) {
+      return const [];
+    }
+
+    return standings.map(_mapStanding).toList(growable: false);
   }
 
   Map<String, Object?> _mapMatch(Map<String, Object?> match) {
@@ -71,6 +86,40 @@ class FootballDataMapper {
     };
   }
 
+  Map<String, Object?> _mapStanding(Map<String, Object?> standing) {
+    final providerGroupName = _requiredString(standing, 'group');
+    final groupId = _groupIdsByProviderName[providerGroupName];
+    if (groupId == null) {
+      throw FormatException(
+        'No baseline group found for provider group $providerGroupName.',
+      );
+    }
+
+    return {
+      'groupId': groupId,
+      'entries': _requiredObjectList(
+        standing,
+        'table',
+      ).map(_mapStandingEntry).toList(growable: false),
+    };
+  }
+
+  Map<String, Object?> _mapStandingEntry(Map<String, Object?> entry) {
+    final providerTeamId = _requiredInt(_requiredObject(entry, 'team'), 'id');
+
+    return {
+      'teamId': _teamIdFor(providerTeamId),
+      'played': _requiredInt(entry, 'playedGames'),
+      'won': _requiredInt(entry, 'won'),
+      'drawn': _requiredInt(entry, 'draw'),
+      'lost': _requiredInt(entry, 'lost'),
+      'goalsFor': _requiredInt(entry, 'goalsFor'),
+      'goalsAgainst': _requiredInt(entry, 'goalsAgainst'),
+      'goalDifference': _requiredInt(entry, 'goalDifference'),
+      'points': _requiredInt(entry, 'points'),
+    };
+  }
+
   String _teamIdFor(int providerTeamId) {
     final teamId = _teamIdsByProviderId[providerTeamId];
     if (teamId == null) {
@@ -104,6 +153,40 @@ Map<int, String> _providerIdsByAppId(
   }
 
   return mappings;
+}
+
+Map<String, String> _providerGroupNamesByAppId(Map<String, Object?> baseline) {
+  final mappings = <String, String>{};
+  for (final item in _requiredObjectList(baseline, 'groups')) {
+    final appId = _requiredString(item, 'id');
+    final providerName = _providerGroupNameFor(appId);
+    final existingAppId = mappings[providerName];
+    if (existingAppId != null) {
+      throw FormatException(
+        'Duplicate baseline group provider name $providerName: '
+        'already maps to $existingAppId, duplicate maps to $appId.',
+      );
+    }
+    mappings[providerName] = appId;
+  }
+
+  return mappings;
+}
+
+String _providerGroupNameFor(String appGroupId) {
+  const prefix = 'group-';
+  if (!appGroupId.startsWith(prefix)) {
+    throw FormatException(
+      'Expected group id "$appGroupId" to start with group-.',
+    );
+  }
+
+  final suffix = appGroupId.substring(prefix.length);
+  if (suffix.isEmpty) {
+    throw FormatException('Expected group id "$appGroupId" to have a suffix.');
+  }
+
+  return 'GROUP_${suffix.toUpperCase()}';
 }
 
 String _mapStatus(String status) {
@@ -191,6 +274,27 @@ Map<String, Object?>? _optionalObject(Map<String, Object?> json, String key) {
   }
 
   throw FormatException('Expected "$key" to be an object.');
+}
+
+List<Map<String, Object?>>? _optionalObjectList(
+  Map<String, Object?> json,
+  String key,
+) {
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
+  if (value is List) {
+    return [
+      for (final item in value)
+        if (item is Map<String, Object?>)
+          item
+        else
+          throw FormatException('Expected "$key" to contain objects.'),
+    ];
+  }
+
+  throw FormatException('Expected "$key" to be a list.');
 }
 
 List<Map<String, Object?>> _requiredObjectList(

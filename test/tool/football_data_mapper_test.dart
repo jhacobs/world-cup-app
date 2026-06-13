@@ -170,6 +170,103 @@ void main() {
         ),
       );
     });
+
+    test('maps standings response for group A', () {
+      final mapper = FootballDataMapper.fromBaseline(_baseline());
+
+      final standings = mapper.mapStandingsResponse({
+        'standings': [
+          {
+            'group': 'GROUP_A',
+            'table': [
+              {
+                'team': {'id': 100},
+                'playedGames': 1,
+                'won': 1,
+                'draw': 0,
+                'lost': 0,
+                'goalsFor': 2,
+                'goalsAgainst': 1,
+                'goalDifference': 1,
+                'points': 3,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(standings, [
+        {
+          'groupId': 'group-a',
+          'entries': [
+            {
+              'teamId': 'mexico',
+              'played': 1,
+              'won': 1,
+              'drawn': 0,
+              'lost': 0,
+              'goalsFor': 2,
+              'goalsAgainst': 1,
+              'goalDifference': 1,
+              'points': 3,
+            },
+          ],
+        },
+      ]);
+    });
+
+    test('throws when standings group is unknown', () {
+      final mapper = FootballDataMapper.fromBaseline(_baseline());
+
+      expect(
+        () => mapper.mapStandingsResponse({
+          'standings': [
+            {'group': 'GROUP_Z', 'table': <Object?>[]},
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('GROUP_Z'),
+          ),
+        ),
+      );
+    });
+
+    test('throws when standings team provider id is unknown', () {
+      final mapper = FootballDataMapper.fromBaseline(_baseline());
+
+      expect(
+        () => mapper.mapStandingsResponse({
+          'standings': [
+            {
+              'group': 'GROUP_A',
+              'table': [
+                {
+                  'team': {'id': 999},
+                  'playedGames': 1,
+                  'won': 1,
+                  'draw': 0,
+                  'lost': 0,
+                  'goalsFor': 2,
+                  'goalsAgainst': 1,
+                  'goalDifference': 1,
+                  'points': 3,
+                },
+              ],
+            },
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('999'),
+          ),
+        ),
+      );
+    });
   });
 }
 
@@ -181,6 +278,9 @@ Map<String, Object?> _baseline() {
     ],
     'matches': [
       {'id': 'match-001', 'providerId': 497000},
+    ],
+    'groups': [
+      {'id': 'group-a'},
     ],
   };
 }
