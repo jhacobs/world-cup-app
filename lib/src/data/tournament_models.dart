@@ -47,6 +47,16 @@ enum MatchStatus {
   }
 }
 
+const Object _copyWithUnset = Object();
+
+T? _copyWithNullable<T>(Object? value, T? currentValue) {
+  if (identical(value, _copyWithUnset)) {
+    return currentValue;
+  }
+
+  return value as T?;
+}
+
 class Tournament {
   const Tournament({
     required this.schemaVersion,
@@ -260,15 +270,16 @@ class Match {
   final MatchScore? score;
   final String? winnerTeamId;
 
+  /// Omitting nullable fields keeps their current values; passing null clears them.
   Match copyWith({
-    int? providerId,
+    Object? providerId = _copyWithUnset,
     MatchStatus? status,
-    MatchScore? score,
-    String? winnerTeamId,
+    Object? score = _copyWithUnset,
+    Object? winnerTeamId = _copyWithUnset,
   }) {
     return Match(
       id: id,
-      providerId: providerId ?? this.providerId,
+      providerId: _copyWithNullable<int>(providerId, this.providerId),
       stage: stage,
       groupId: groupId,
       kickoffUtc: kickoffUtc,
@@ -278,8 +289,8 @@ class Match {
       homePlaceholder: homePlaceholder,
       awayPlaceholder: awayPlaceholder,
       status: status ?? this.status,
-      score: score ?? this.score,
-      winnerTeamId: winnerTeamId ?? this.winnerTeamId,
+      score: _copyWithNullable<MatchScore>(score, this.score),
+      winnerTeamId: _copyWithNullable<String>(winnerTeamId, this.winnerTeamId),
     );
   }
 }

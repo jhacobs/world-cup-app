@@ -9,6 +9,12 @@ void main() {
       expect(tournament.schemaVersion, 1);
       expect(tournament.info.id, 'world-cup-2026');
       expect(tournament.teams.first.countryCode, 'MEX');
+      final southAfrica = tournament.teams.singleWhere(
+        (team) => team.id == 'south-africa',
+      );
+      expect(southAfrica.name, 'South Africa');
+      expect(southAfrica.shortName, 'RSA');
+      expect(southAfrica.countryCode, 'RSA');
       expect(tournament.groups.first.name, 'Group A');
       expect(tournament.venues.first.city, 'Mexico City');
       expect(tournament.matches.first.stage, TournamentStage.group);
@@ -34,6 +40,30 @@ void main() {
       expect(match.awayTeamId, isNull);
       expect(match.homePlaceholder, 'Winner Group A');
       expect(match.awayPlaceholder, 'Runner-up Group B');
+    });
+
+    test('copyWith can clear nullable result fields', () {
+      final match = Match(
+        id: 'match-001',
+        providerId: 497000,
+        stage: TournamentStage.group,
+        kickoffUtc: DateTime.utc(2026, 6, 11, 19),
+        venueId: 'estadio-azteca',
+        status: MatchStatus.completed,
+        score: MatchScore(home: 2, away: 1),
+        winnerTeamId: 'mexico',
+      );
+
+      final updated = match.copyWith(
+        providerId: null,
+        score: null,
+        winnerTeamId: null,
+      );
+
+      expect(updated.providerId, isNull);
+      expect(updated.score, isNull);
+      expect(updated.winnerTeamId, isNull);
+      expect(updated.status, MatchStatus.completed);
     });
   });
 }
