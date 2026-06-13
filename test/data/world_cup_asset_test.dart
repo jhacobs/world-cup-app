@@ -23,6 +23,7 @@ void main() {
     final venueIds = tournament.venues.map((venue) => venue.id).toSet();
     final teamIds = tournament.teams.map((team) => team.id).toSet();
     final groupIds = tournament.groups.map((group) => group.id).toSet();
+    final teamsById = {for (final team in tournament.teams) team.id: team};
     final groupsById = {for (final group in tournament.groups) group.id: group};
 
     for (final team in tournament.teams) {
@@ -43,6 +44,7 @@ void main() {
     for (final group in tournament.groups) {
       for (final teamId in group.teamIds) {
         expect(teamIds, contains(teamId));
+        expect(teamsById[teamId]?.groupId, group.id);
       }
     }
   });
