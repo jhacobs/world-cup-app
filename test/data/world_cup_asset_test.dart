@@ -22,12 +22,22 @@ void main() {
 
     final venueIds = tournament.venues.map((venue) => venue.id).toSet();
     final teamIds = tournament.teams.map((team) => team.id).toSet();
+    final groupIds = tournament.groups.map((group) => group.id).toSet();
+    final groupsById = {for (final group in tournament.groups) group.id: group};
+
+    for (final team in tournament.teams) {
+      _expectOptionalGroupIdExists(groupIds, team.groupId);
+      final groupId = team.groupId;
+      if (groupId != null) {
+        expect(groupsById[groupId]!.teamIds, contains(team.id));
+      }
+    }
 
     for (final match in tournament.matches) {
       expect(venueIds, contains(match.venueId));
+      _expectOptionalGroupIdExists(groupIds, match.groupId);
       _expectOptionalTeamIdExists(teamIds, match.homeTeamId);
       _expectOptionalTeamIdExists(teamIds, match.awayTeamId);
-      _expectOptionalTeamIdExists(teamIds, match.winnerTeamId);
     }
 
     for (final group in tournament.groups) {
@@ -44,4 +54,12 @@ void _expectOptionalTeamIdExists(Set<String> teamIds, String? teamId) {
   }
 
   expect(teamIds, contains(teamId));
+}
+
+void _expectOptionalGroupIdExists(Set<String> groupIds, String? groupId) {
+  if (groupId == null) {
+    return;
+  }
+
+  expect(groupIds, contains(groupId));
 }
