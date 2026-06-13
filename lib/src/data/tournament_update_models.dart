@@ -1,13 +1,14 @@
 import 'tournament_models.dart';
 
 class TournamentUpdate {
-  const TournamentUpdate({
+  TournamentUpdate({
     required this.schemaVersion,
     required this.source,
     required this.lastUpdated,
-    required this.matches,
-    this.groupStandings = const [],
-  });
+    required List<MatchUpdate> matches,
+    List<GroupStanding> groupStandings = const [],
+  }) : matches = List.unmodifiable(matches),
+       groupStandings = List.unmodifiable(groupStandings);
 
   factory TournamentUpdate.fromJson(Map<String, Object?> json) {
     final schemaVersion = _requiredInt(json, 'schemaVersion');

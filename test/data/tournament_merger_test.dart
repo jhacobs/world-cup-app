@@ -33,6 +33,32 @@ void main() {
       expect(match.winnerTeamId, 'mexico');
     });
 
+    test('preserves provider id when completed update omits provider id', () {
+      final baseline = _baselineTournament();
+      final update = TournamentUpdate.fromJson({
+        'schemaVersion': 1,
+        'source': 'test-provider',
+        'lastUpdated': '2026-06-11T22:00:00Z',
+        'matches': [
+          {
+            'matchId': 'match-001',
+            'status': 'completed',
+            'homeScore': 2,
+            'awayScore': 1,
+            'winnerTeamId': 'mexico',
+          },
+        ],
+      });
+
+      final tournament = TournamentMerger.merge(baseline, update);
+      final match = tournament.matches.single;
+
+      expect(match.providerId, 497000);
+      expect(match.status, MatchStatus.completed);
+      expect(match.score?.home, 2);
+      expect(match.score?.away, 1);
+    });
+
     test(
       'ignores unknown match update and keeps scheduled match scoreless',
       () {
@@ -123,6 +149,60 @@ void main() {
       expect(match.status, MatchStatus.scheduled);
       expect(match.score, isNull);
       expect(match.winnerTeamId, isNull);
+    });
+  });
+
+  group('TournamentUpdate', () {
+    test('defensively copies matches and group standings', () {
+      final matches = [
+        const MatchUpdate(matchId: 'match-001', status: MatchStatus.completed),
+      ];
+      final groupStandings = [
+        GroupStanding(
+          groupId: 'group-a',
+          entries: const [
+            GroupStandingEntry(
+              teamId: 'mexico',
+              played: 1,
+              won: 1,
+              drawn: 0,
+              lost: 0,
+              goalsFor: 2,
+              goalsAgainst: 1,
+              goalDifference: 1,
+              points: 3,
+            ),
+          ],
+        ),
+      ];
+
+      final update = TournamentUpdate(
+        schemaVersion: 1,
+        source: 'test-provider',
+        lastUpdated: DateTime.utc(2026, 6, 11, 22),
+        matches: matches,
+        groupStandings: groupStandings,
+      );
+
+      matches.clear();
+      groupStandings.clear();
+
+      expect(update.matches, hasLength(1));
+      expect(update.matches.single.matchId, 'match-001');
+      expect(update.groupStandings, hasLength(1));
+      expect(update.groupStandings.single.groupId, 'group-a');
+      expect(
+        () => update.matches.add(
+          const MatchUpdate(matchId: 'match-002', status: MatchStatus.live),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => update.groupStandings.add(
+          GroupStanding(groupId: 'group-b', entries: const []),
+        ),
+        throwsUnsupportedError,
+      );
     });
   });
 }

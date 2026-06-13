@@ -27,7 +27,7 @@ class TournamentMerger {
 
   static Match _mergeMatch(Match baseline, MatchUpdate update) {
     return baseline.copyWith(
-      providerId: update.providerId,
+      providerId: update.providerId ?? baseline.providerId,
       status: update.status,
       score: _scoreFor(update),
       winnerTeamId: update.winnerTeamId,
