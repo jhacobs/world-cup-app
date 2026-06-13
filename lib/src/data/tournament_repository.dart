@@ -33,7 +33,7 @@ class TournamentRepository {
               .call(updateUrl);
       final update = TournamentUpdate.fromJson(_decodeJsonObject(updateJson));
       return TournamentMerger.merge(baseline, update);
-    } catch (_) {
+    } on Exception {
       return baseline;
     }
   }

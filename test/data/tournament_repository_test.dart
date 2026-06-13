@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:world_cup_app/src/data/tournament_repository.dart';
+import 'package:world_cup_app/src/data/tournament_update_client.dart';
 import 'package:world_cup_app/src/data/world_cup_data_config.dart';
 
 void main() {
@@ -51,7 +53,7 @@ void main() {
           updateUrl: Uri.parse('https://updates.example.com/world-cup.json'),
         ),
         loadAssetString: (_) async => _baselineTournamentJson(),
-        fetchUpdateString: (_) async => throw StateError('network failed'),
+        fetchUpdateString: (_) async => throw Exception('network failed'),
       );
 
       final tournament = await repository.loadTournament();
@@ -62,6 +64,35 @@ void main() {
       expect(match.winnerTeamId, isNull);
     });
 
+    test('keeps baseline when remote update fetch times out', () async {
+      final repository = TournamentRepository(
+        config: WorldCupDataConfig(
+          updateUrl: Uri.parse('https://updates.example.com/world-cup.json'),
+        ),
+        loadAssetString: (_) async => _baselineTournamentJson(),
+        fetchUpdateString: (_) async => throw TimeoutException('timed out'),
+      );
+
+      final tournament = await repository.loadTournament();
+      final match = tournament.matches.single;
+
+      expect(match.status.name, 'scheduled');
+      expect(match.score, isNull);
+      expect(match.winnerTeamId, isNull);
+    });
+
+    test('does not swallow remote update errors', () async {
+      final repository = TournamentRepository(
+        config: WorldCupDataConfig(
+          updateUrl: Uri.parse('https://updates.example.com/world-cup.json'),
+        ),
+        loadAssetString: (_) async => _baselineTournamentJson(),
+        fetchUpdateString: (_) async => throw StateError('broken state'),
+      );
+
+      expect(repository.loadTournament, throwsStateError);
+    });
+
     test('invalid baseline JSON throws FormatException', () async {
       final repository = TournamentRepository(
         config: const WorldCupDataConfig(),
@@ -69,6 +100,23 @@ void main() {
       );
 
       expect(repository.loadTournament, throwsFormatException);
+    });
+  });
+
+  group('TournamentUpdateClient', () {
+    test('times out slow update fetches', () async {
+      final client = TournamentUpdateClient(
+        timeout: const Duration(milliseconds: 10),
+        fetch: (_) => Future<String>.delayed(
+          const Duration(seconds: 1),
+          _tournamentUpdateJson,
+        ),
+      );
+
+      await expectLater(
+        client.fetch(Uri.parse('https://updates.example.com/world-cup.json')),
+        throwsA(isA<TimeoutException>()),
+      );
     });
   });
 }
