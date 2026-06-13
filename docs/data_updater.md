@@ -22,6 +22,19 @@ The live updater reads from the football-data.org API v4:
 football-data.org free-plan scores are delayed. Treat the generated data as
 near-current rather than live.
 
+## Baseline Provider IDs
+
+The updater maps football-data.org responses onto the app's stable IDs. For live
+generation, `assets/data/world_cup_2026.json` must include football-data.org
+`providerId` values for teams and matches. The starter asset is intentionally
+small and may contain `providerId: null`, so it is useful for local app parsing
+and fixture-mode tests but is not enough for the live workflow by itself.
+
+Before relying on the scheduled workflow, replace the starter asset with a full
+provider-mapped tournament baseline. If the baseline does not contain provider
+IDs, the updater fails before calling football-data.org so it does not waste API
+quota or publish misleading empty updates.
+
 ## GitHub Pages Setup
 
 1. Create a football-data.org account and generate an API token.

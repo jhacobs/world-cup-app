@@ -11,10 +11,14 @@ class FootballDataMapper {
 
   factory FootballDataMapper.fromBaseline(Map<String, Object?> baseline) {
     final groupIdsByProviderName = _providerGroupNamesByAppId(baseline);
+    final matchIdsByProviderId = _providerIdsByAppId(baseline, 'matches');
+    final teamIdsByProviderId = _providerIdsByAppId(baseline, 'teams');
+    _requireProviderMappings(matchIdsByProviderId, 'matches');
+    _requireProviderMappings(teamIdsByProviderId, 'teams');
 
     return FootballDataMapper._(
-      matchIdsByProviderId: _providerIdsByAppId(baseline, 'matches'),
-      teamIdsByProviderId: _providerIdsByAppId(baseline, 'teams'),
+      matchIdsByProviderId: matchIdsByProviderId,
+      teamIdsByProviderId: teamIdsByProviderId,
       groupIdsByProviderName: groupIdsByProviderName,
       baselineGroupIds: groupIdsByProviderName.values.toSet(),
     );
@@ -189,6 +193,17 @@ Map<int, String> _providerIdsByAppId(
   }
 
   return mappings;
+}
+
+void _requireProviderMappings(Map<int, String> mappings, String key) {
+  if (mappings.isNotEmpty) {
+    return;
+  }
+
+  throw FormatException(
+    'Baseline $key must include football-data.org providerId values before '
+    'live updates can be generated.',
+  );
 }
 
 Map<String, String> _providerGroupNamesByAppId(Map<String, Object?> baseline) {

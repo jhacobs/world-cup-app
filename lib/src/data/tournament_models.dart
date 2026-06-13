@@ -254,9 +254,9 @@ class Match {
       awayTeamId: _optionalString(json, 'awayTeamId'),
       homePlaceholder: _optionalString(json, 'homePlaceholder'),
       awayPlaceholder: _optionalString(json, 'awayPlaceholder'),
-      status: MatchStatus.scheduled,
-      score: null,
-      winnerTeamId: null,
+      status: _optionalMatchStatus(json, 'status') ?? MatchStatus.scheduled,
+      score: _optionalMatchScore(json, 'score'),
+      winnerTeamId: _optionalString(json, 'winnerTeamId'),
     );
   }
 
@@ -420,6 +420,30 @@ int? _optionalInt(Map<String, Object?> json, String key) {
   }
 
   throw FormatException('Expected "$key" to be an int.');
+}
+
+MatchStatus? _optionalMatchStatus(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
+  if (value is String) {
+    return MatchStatus.fromJson(value);
+  }
+
+  throw FormatException('Expected "$key" to be a string.');
+}
+
+MatchScore? _optionalMatchScore(Map<String, Object?> json, String key) {
+  final value = json[key];
+  if (value == null) {
+    return null;
+  }
+  if (value is Map<String, Object?>) {
+    return MatchScore.fromJson(value);
+  }
+
+  throw FormatException('Expected "$key" to be an object.');
 }
 
 DateTime _requiredDateTime(Map<String, Object?> json, String key) {

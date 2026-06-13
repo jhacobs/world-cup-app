@@ -51,6 +51,28 @@ void main() {
       expect(match.awayPlaceholder, 'Runner-up Group B');
     });
 
+    test('parses optional baseline match result fields', () {
+      final json = _baselineTournamentJson();
+      final matches = json['matches']! as List<Object?>;
+      final match = matches.first! as Map<String, Object?>;
+      match['status'] = 'completed';
+      match['score'] = {
+        'home': 2,
+        'away': 1,
+        'homePenalty': null,
+        'awayPenalty': null,
+      };
+      match['winnerTeamId'] = 'mexico';
+
+      final tournament = Tournament.fromJson(json);
+      final parsedMatch = tournament.matches.first;
+
+      expect(parsedMatch.status, MatchStatus.completed);
+      expect(parsedMatch.score!.home, 2);
+      expect(parsedMatch.score!.away, 1);
+      expect(parsedMatch.winnerTeamId, 'mexico');
+    });
+
     test('copyWith can clear nullable result fields', () {
       final match = Match(
         id: 'match-001',

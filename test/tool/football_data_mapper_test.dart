@@ -171,6 +171,51 @@ void main() {
       );
     });
 
+    test('throws when baseline has no provider match ids', () {
+      final baseline = _baseline();
+      baseline['matches'] = [
+        {'id': 'match-001', 'providerId': null},
+      ];
+
+      expect(
+        () => FootballDataMapper.fromBaseline(baseline),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('matches'),
+              contains('providerId'),
+              contains('live updates'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('throws when baseline has no provider team ids', () {
+      final baseline = _baseline();
+      baseline['teams'] = [
+        {'id': 'mexico', 'providerId': null},
+        {'id': 'south-africa', 'providerId': null},
+      ];
+
+      expect(
+        () => FootballDataMapper.fromBaseline(baseline),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('teams'),
+              contains('providerId'),
+              contains('live updates'),
+            ),
+          ),
+        ),
+      );
+    });
+
     test('maps standings response for group A', () {
       final mapper = FootballDataMapper.fromBaseline(_baseline());
 

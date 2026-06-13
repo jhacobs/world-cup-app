@@ -28,6 +28,7 @@ Future<void> _run(List<String> arguments) async {
   }
 
   final baseline = await _readJsonObject(options.baselinePath);
+  final mapper = FootballDataMapper.fromBaseline(baseline);
   final client = HttpClient();
   try {
     final matches = await _loadProviderResponse(
@@ -43,7 +44,6 @@ Future<void> _run(List<String> arguments) async {
       client: client,
     );
 
-    final mapper = FootballDataMapper.fromBaseline(baseline);
     final update = mapper.mapMatchesResponse(matches);
     update['groupStandings'] = mapper.mapStandingsResponse(standings);
 
