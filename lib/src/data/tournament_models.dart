@@ -58,15 +58,19 @@ T? _copyWithNullable<T>(Object? value, T? currentValue) {
 }
 
 class Tournament {
-  const Tournament({
+  Tournament({
     required this.schemaVersion,
     required this.info,
-    required this.teams,
-    required this.groups,
-    required this.venues,
-    required this.matches,
-    this.groupStandings = const [],
-  });
+    required List<Team> teams,
+    required List<TournamentGroup> groups,
+    required List<Venue> venues,
+    required List<Match> matches,
+    List<GroupStanding> groupStandings = const [],
+  }) : teams = List.unmodifiable(teams),
+       groups = List.unmodifiable(groups),
+       venues = List.unmodifiable(venues),
+       matches = List.unmodifiable(matches),
+       groupStandings = List.unmodifiable(groupStandings);
 
   factory Tournament.fromJson(Map<String, Object?> json) {
     final schemaVersion = _requiredInt(json, 'schemaVersion');
@@ -179,11 +183,11 @@ class Team {
 }
 
 class TournamentGroup {
-  const TournamentGroup({
+  TournamentGroup({
     required this.id,
     required this.name,
-    required this.teamIds,
-  });
+    required List<String> teamIds,
+  }) : teamIds = List.unmodifiable(teamIds);
 
   factory TournamentGroup.fromJson(Map<String, Object?> json) {
     return TournamentGroup(
@@ -319,7 +323,10 @@ class MatchScore {
 }
 
 class GroupStanding {
-  const GroupStanding({required this.groupId, required this.entries});
+  GroupStanding({
+    required this.groupId,
+    required List<GroupStandingEntry> entries,
+  }) : entries = List.unmodifiable(entries);
 
   factory GroupStanding.fromJson(Map<String, Object?> json) {
     return GroupStanding(
@@ -425,7 +432,17 @@ DateTime _requiredDateTime(Map<String, Object?> json, String key) {
 }
 
 DateTime _requiredDateTimeUtc(Map<String, Object?> json, String key) {
-  return _requiredDateTime(json, key).toUtc();
+  final value = _requiredString(json, key);
+  final parsed = _requiredDateTime(json, key);
+  if (!parsed.isUtc && !_hasExplicitTimeZone(value)) {
+    throw FormatException('Expected "$key" to include a timezone.');
+  }
+
+  return parsed.toUtc();
+}
+
+bool _hasExplicitTimeZone(String value) {
+  return RegExp(r'(?:[zZ]|[+-]\d{2}:?\d{2})$').hasMatch(value);
 }
 
 Map<String, Object?> _requiredObject(Map<String, Object?> json, String key) {

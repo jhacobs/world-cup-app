@@ -29,6 +29,15 @@ void main() {
       expect(() => Tournament.fromJson(json), throwsFormatException);
     });
 
+    test('rejects timezone-less kickoffUtc strings', () {
+      final json = _baselineTournamentJson();
+      final matches = json['matches']! as List<Object?>;
+      final match = matches.first! as Map<String, Object?>;
+      match['kickoffUtc'] = '2026-06-11T19:00:00';
+
+      expect(() => Tournament.fromJson(json), throwsFormatException);
+    });
+
     test('parses unknown knockout teams using placeholders', () {
       final tournament = Tournament.fromJson(_baselineTournamentJson());
       final match = tournament.matches.singleWhere(
@@ -64,6 +73,108 @@ void main() {
       expect(updated.score, isNull);
       expect(updated.winnerTeamId, isNull);
       expect(updated.status, MatchStatus.completed);
+    });
+
+    test('defensively copies list inputs', () {
+      final teams = [
+        const Team(
+          id: 'mexico',
+          name: 'Mexico',
+          shortName: 'MEX',
+          countryCode: 'MEX',
+        ),
+      ];
+      final groups = [
+        TournamentGroup(id: 'group-a', name: 'Group A', teamIds: ['mexico']),
+      ];
+      final venues = [
+        const Venue(
+          id: 'estadio-azteca',
+          name: 'Estadio Azteca',
+          city: 'Mexico City',
+          country: 'Mexico',
+        ),
+      ];
+      final matches = [
+        Match(
+          id: 'match-001',
+          stage: TournamentStage.group,
+          kickoffUtc: DateTime.utc(2026, 6, 11, 19),
+          venueId: 'estadio-azteca',
+        ),
+      ];
+      final groupStandings = [
+        GroupStanding(
+          groupId: 'group-a',
+          entries: [
+            const GroupStandingEntry(
+              teamId: 'mexico',
+              played: 0,
+              won: 0,
+              drawn: 0,
+              lost: 0,
+              goalsFor: 0,
+              goalsAgainst: 0,
+              goalDifference: 0,
+              points: 0,
+            ),
+          ],
+        ),
+      ];
+      final tournamentGroupTeamIds = ['mexico'];
+      final groupStandingEntries = [
+        const GroupStandingEntry(
+          teamId: 'mexico',
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDifference: 0,
+          points: 0,
+        ),
+      ];
+
+      final tournament = Tournament(
+        schemaVersion: 1,
+        info: TournamentInfo(
+          id: 'world-cup-2026',
+          name: 'FIFA World Cup 2026',
+          startDate: DateTime(2026, 6, 11),
+          endDate: DateTime(2026, 7, 19),
+        ),
+        teams: teams,
+        groups: groups,
+        venues: venues,
+        matches: matches,
+        groupStandings: groupStandings,
+      );
+      final tournamentGroup = TournamentGroup(
+        id: 'group-a',
+        name: 'Group A',
+        teamIds: tournamentGroupTeamIds,
+      );
+      final groupStanding = GroupStanding(
+        groupId: 'group-a',
+        entries: groupStandingEntries,
+      );
+
+      teams.clear();
+      groups.clear();
+      venues.clear();
+      matches.clear();
+      groupStandings.clear();
+      tournamentGroupTeamIds.clear();
+      groupStandingEntries.clear();
+
+      expect(tournament.teams, hasLength(1));
+      expect(tournament.groups, hasLength(1));
+      expect(tournament.venues, hasLength(1));
+      expect(tournament.matches, hasLength(1));
+      expect(tournament.groupStandings, hasLength(1));
+      expect(tournamentGroup.teamIds, ['mexico']);
+      expect(groupStanding.entries, hasLength(1));
     });
   });
 }
