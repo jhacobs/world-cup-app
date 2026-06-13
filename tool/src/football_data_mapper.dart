@@ -3,21 +3,27 @@ class FootballDataMapper {
     required Map<int, String> matchIdsByProviderId,
     required Map<int, String> teamIdsByProviderId,
     required Map<String, String> groupIdsByProviderName,
+    required Set<String> baselineGroupIds,
   }) : _matchIdsByProviderId = Map.unmodifiable(matchIdsByProviderId),
        _teamIdsByProviderId = Map.unmodifiable(teamIdsByProviderId),
-       _groupIdsByProviderName = Map.unmodifiable(groupIdsByProviderName);
+       _groupIdsByProviderName = Map.unmodifiable(groupIdsByProviderName),
+       _baselineGroupIds = Set.unmodifiable(baselineGroupIds);
 
   factory FootballDataMapper.fromBaseline(Map<String, Object?> baseline) {
+    final groupIdsByProviderName = _providerGroupNamesByAppId(baseline);
+
     return FootballDataMapper._(
       matchIdsByProviderId: _providerIdsByAppId(baseline, 'matches'),
       teamIdsByProviderId: _providerIdsByAppId(baseline, 'teams'),
-      groupIdsByProviderName: _providerGroupNamesByAppId(baseline),
+      groupIdsByProviderName: groupIdsByProviderName,
+      baselineGroupIds: groupIdsByProviderName.values.toSet(),
     );
   }
 
   final Map<int, String> _matchIdsByProviderId;
   final Map<int, String> _teamIdsByProviderId;
   final Map<String, String> _groupIdsByProviderName;
+  final Set<String> _baselineGroupIds;
 
   Map<String, Object?> mapMatchesResponse(Map<String, Object?> response) {
     return {
@@ -40,7 +46,37 @@ class FootballDataMapper {
       return const [];
     }
 
-    return standings.map(_mapStanding).toList(growable: false);
+    final mappedStandings = <Map<String, Object?>>[];
+    final seenGroupIds = <String>{};
+    for (final standing in standings) {
+      final providerGroupName = _requiredString(standing, 'group');
+      final mappedStanding = _mapStanding(standing);
+      final groupId = _requiredString(mappedStanding, 'groupId');
+      if (!seenGroupIds.add(groupId)) {
+        throw FormatException(
+          'Duplicate standings group $groupId from provider group '
+          '$providerGroupName.',
+        );
+      }
+      mappedStandings.add(mappedStanding);
+    }
+
+    if (mappedStandings.isNotEmpty) {
+      final missingGroupIds = _baselineGroupIds.difference(seenGroupIds);
+      final extraGroupIds = seenGroupIds.difference(_baselineGroupIds);
+      if (missingGroupIds.isNotEmpty) {
+        throw FormatException(
+          'Missing standings groups: ${_sortedStrings(missingGroupIds).join(', ')}.',
+        );
+      }
+      if (extraGroupIds.isNotEmpty) {
+        throw FormatException(
+          'Unexpected standings groups: ${_sortedStrings(extraGroupIds).join(', ')}.',
+        );
+      }
+    }
+
+    return List.unmodifiable(mappedStandings);
   }
 
   Map<String, Object?> _mapMatch(Map<String, Object?> match) {
@@ -187,6 +223,10 @@ String _providerGroupNameFor(String appGroupId) {
   }
 
   return 'GROUP_${suffix.toUpperCase()}';
+}
+
+List<String> _sortedStrings(Iterable<String> values) {
+  return values.toList()..sort();
 }
 
 String _mapStatus(String status) {

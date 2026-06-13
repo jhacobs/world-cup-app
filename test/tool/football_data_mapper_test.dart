@@ -215,6 +215,76 @@ void main() {
       ]);
     });
 
+    test('maps baseline groups A-L including GROUP_L to group-l', () {
+      final mapper = FootballDataMapper.fromBaseline(_baselineWithGroupsAL());
+
+      final standings = mapper.mapStandingsResponse({
+        'standings': [
+          for (final group in _providerGroupsAL())
+            {'group': group, 'table': <Object?>[]},
+        ],
+      });
+
+      expect(standings.map((standing) => standing['groupId']), [
+        'group-a',
+        'group-b',
+        'group-c',
+        'group-d',
+        'group-e',
+        'group-f',
+        'group-g',
+        'group-h',
+        'group-i',
+        'group-j',
+        'group-k',
+        'group-l',
+      ]);
+    });
+
+    test('throws when standings response has duplicate groups', () {
+      final mapper = FootballDataMapper.fromBaseline(_baseline());
+
+      expect(
+        () => mapper.mapStandingsResponse({
+          'standings': [
+            {'group': 'GROUP_A', 'table': <Object?>[]},
+            {'group': 'GROUP_A', 'table': <Object?>[]},
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('Duplicate'),
+              contains('group-a'),
+              contains('GROUP_A'),
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('throws when non-empty standings misses a baseline group', () {
+      final mapper = FootballDataMapper.fromBaseline(_baselineWithGroupsAL());
+
+      expect(
+        () => mapper.mapStandingsResponse({
+          'standings': [
+            for (final group in _providerGroupsAL().take(11))
+              {'group': group, 'table': <Object?>[]},
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(contains('Missing'), contains('group-l')),
+          ),
+        ),
+      );
+    });
+
     test('throws when standings group is unknown', () {
       final mapper = FootballDataMapper.fromBaseline(_baseline());
 
@@ -284,3 +354,41 @@ Map<String, Object?> _baseline() {
     ],
   };
 }
+
+Map<String, Object?> _baselineWithGroupsAL() {
+  final baseline = _baseline();
+  baseline['groups'] = [
+    for (final groupId in _appGroupsAL()) {'id': groupId},
+  ];
+  return baseline;
+}
+
+List<String> _appGroupsAL() => [
+  'group-a',
+  'group-b',
+  'group-c',
+  'group-d',
+  'group-e',
+  'group-f',
+  'group-g',
+  'group-h',
+  'group-i',
+  'group-j',
+  'group-k',
+  'group-l',
+];
+
+List<String> _providerGroupsAL() => [
+  'GROUP_A',
+  'GROUP_B',
+  'GROUP_C',
+  'GROUP_D',
+  'GROUP_E',
+  'GROUP_F',
+  'GROUP_G',
+  'GROUP_H',
+  'GROUP_I',
+  'GROUP_J',
+  'GROUP_K',
+  'GROUP_L',
+];
