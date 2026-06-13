@@ -188,12 +188,50 @@ void main() {
         throwsUnsupportedError,
       );
       expect(
+        () => tournament.groups.add(
+          TournamentGroup(id: 'group-b', name: 'Group B', teamIds: ['canada']),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => tournament.venues.add(
+          const Venue(
+            id: 'bc-place',
+            name: 'BC Place',
+            city: 'Vancouver',
+            country: 'Canada',
+          ),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
         () => tournament.matches.add(
           Match(
             id: 'match-002',
             stage: TournamentStage.group,
             kickoffUtc: DateTime.utc(2026, 6, 12, 19),
             venueId: 'estadio-azteca',
+          ),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => tournament.groupStandings.add(
+          GroupStanding(
+            groupId: 'group-b',
+            entries: [
+              const GroupStandingEntry(
+                teamId: 'canada',
+                played: 0,
+                won: 0,
+                drawn: 0,
+                lost: 0,
+                goalsFor: 0,
+                goalsAgainst: 0,
+                goalDifference: 0,
+                points: 0,
+              ),
+            ],
           ),
         ),
         throwsUnsupportedError,
