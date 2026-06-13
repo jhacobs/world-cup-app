@@ -175,6 +175,49 @@ void main() {
       expect(tournament.groupStandings, hasLength(1));
       expect(tournamentGroup.teamIds, ['mexico']);
       expect(groupStanding.entries, hasLength(1));
+
+      expect(
+        () => tournament.teams.add(
+          const Team(
+            id: 'canada',
+            name: 'Canada',
+            shortName: 'CAN',
+            countryCode: 'CAN',
+          ),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => tournament.matches.add(
+          Match(
+            id: 'match-002',
+            stage: TournamentStage.group,
+            kickoffUtc: DateTime.utc(2026, 6, 12, 19),
+            venueId: 'estadio-azteca',
+          ),
+        ),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => tournamentGroup.teamIds.add('canada'),
+        throwsUnsupportedError,
+      );
+      expect(
+        () => groupStanding.entries.add(
+          const GroupStandingEntry(
+            teamId: 'canada',
+            played: 0,
+            won: 0,
+            drawn: 0,
+            lost: 0,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            goalDifference: 0,
+            points: 0,
+          ),
+        ),
+        throwsUnsupportedError,
+      );
     });
   });
 }
