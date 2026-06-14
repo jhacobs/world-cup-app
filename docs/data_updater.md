@@ -72,6 +72,39 @@ flutter build apk --dart-define=WORLD_CUP_UPDATES_URL="${updates_url%/}/world_cu
 If `WORLD_CUP_UPDATES_URL` is omitted or empty, the app runs from the bundled
 baseline asset only.
 
+### Convenience Make Targets
+
+Use the project `Makefile` to avoid retyping the Dart define. These targets try
+to resolve the GitHub Pages URL with `gh` and pass
+`WORLD_CUP_UPDATES_URL` automatically:
+
+```sh
+make run
+make build-apk
+make build-appbundle
+make build-ios
+```
+
+Pass extra Flutter flags through `ARGS`, for example:
+
+```sh
+make run ARGS="-d chrome"
+```
+
+Override the update URL manually when needed:
+
+```sh
+make run WORLD_CUP_UPDATES_URL="https://example.com/world_cup_2026_updates.json"
+make build-apk WORLD_CUP_UPDATES_URL="https://example.com/world_cup_2026_updates.json"
+```
+
+Offline targets intentionally omit the Dart define:
+
+```sh
+make run-offline
+make build-apk-offline
+```
+
 ## Local Live Run
 
 Export the API token before running the updater against football-data.org:
