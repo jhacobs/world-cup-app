@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "info": {
+    "id": "world-cup-2026",
+    "name": "FIFA World Cup 2026",
+    "startDate": "2026-06-11",
+    "endDate": "2026-07-19"
+  },
+  "teams": [
+    {
+      "id": "mexico",
+      "name": "Mexico",
+      "shortName": "MEX",
+      "countryCode": "MEX",
+      "groupId": "group-a",
+      "providerId": 1001
+    },
+    {
+      "id": "south-africa",
+      "name": "South Africa",
+      "shortName": "RSA",
+      "countryCode": "RSA",
+      "groupId": "group-a",
+      "providerId": 1002
+    }
+  ],
+  "groups": [
+    {
+      "id": "group-a",
+      "name": "Group A",
+      "teamIds": [
+        "mexico",
+        "south-africa"
+      ]
+    }
+  ],
+  "venues": [
+    {
+      "id": "mexico-city-stadium",
+      "name": "Mexico City Stadium",
+      "city": "Mexico City",
+      "country": "Mexico"
+    }
+  ],
+  "matches": [
+    {
+      "id": "match-001",
+      "providerId": null,
+      "stage": "group",
+      "groupId": "group-a",
+      "kickoffUtc": "2026-06-11T19:00:00Z",
+      "venueId": "mexico-city-stadium",
+      "homeTeamId": "mexico",
+      "awayTeamId": "south-africa"
+    }
+  ]
+}
