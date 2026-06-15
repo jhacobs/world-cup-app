@@ -95,16 +95,20 @@ class FootballDataMapper {
     final score = _requiredObject(match, 'score');
     final fullTime = _requiredObject(score, 'fullTime');
     final penalties = _optionalObject(score, 'penalties');
-    final homeProviderTeamId = _requiredInt(
+    final homeProviderTeamId = _optionalInt(
       _requiredObject(match, 'homeTeam'),
       'id',
     );
-    final awayProviderTeamId = _requiredInt(
+    final awayProviderTeamId = _optionalInt(
       _requiredObject(match, 'awayTeam'),
       'id',
     );
-    final homeTeamId = _teamIdFor(homeProviderTeamId);
-    final awayTeamId = _teamIdFor(awayProviderTeamId);
+    final homeTeamId = homeProviderTeamId == null
+        ? null
+        : _teamIdFor(homeProviderTeamId);
+    final awayTeamId = awayProviderTeamId == null
+        ? null
+        : _teamIdFor(awayProviderTeamId);
 
     return {
       'matchId': matchId,
@@ -128,7 +132,8 @@ class FootballDataMapper {
 
   Map<String, Object?> _mapStanding(Map<String, Object?> standing) {
     final providerGroupName = _requiredString(standing, 'group');
-    final groupId = _groupIdsByProviderName[providerGroupName];
+    final groupId =
+        _groupIdsByProviderName[_normalizeProviderGroupName(providerGroupName)];
     if (groupId == null) {
       throw FormatException(
         'No baseline group found for provider group $providerGroupName.',
@@ -240,6 +245,18 @@ String _providerGroupNameFor(String appGroupId) {
   return 'GROUP_${suffix.toUpperCase()}';
 }
 
+String _normalizeProviderGroupName(String providerGroupName) {
+  final normalized = providerGroupName.trim().toUpperCase().replaceAll(
+    ' ',
+    '_',
+  );
+  if (!normalized.startsWith('GROUP_')) {
+    return providerGroupName;
+  }
+
+  return normalized;
+}
+
 List<String> _sortedStrings(Iterable<String> values) {
   return values.toList()..sort();
 }
@@ -257,15 +274,19 @@ String _mapStatus(String status) {
 
 String? _mapWinner(
   String? winner, {
-  required String homeTeamId,
-  required String awayTeamId,
+  required String? homeTeamId,
+  required String? awayTeamId,
 }) {
   return switch (winner) {
-    'HOME_TEAM' => homeTeamId,
-    'AWAY_TEAM' => awayTeamId,
+    'HOME_TEAM' => homeTeamId ?? _missingWinnerTeamId('home'),
+    'AWAY_TEAM' => awayTeamId ?? _missingWinnerTeamId('away'),
     'DRAW' || null => null,
     _ => throw FormatException('Unknown football-data winner "$winner".'),
   };
+}
+
+Never _missingWinnerTeamId(String side) {
+  throw FormatException('Cannot map $side winner before team is known.');
 }
 
 String _requiredString(Map<String, Object?> json, String key) {
