@@ -159,7 +159,7 @@ class TournamentErrorPage extends StatelessWidget {
                 Icon(Icons.error_outline, color: AppColors.accent, size: 34),
                 SizedBox(height: 12),
                 Text(
-                  'Unable to load tournament data',
+                  'Kan toernooigegevens niet laden',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.foreground,
@@ -169,7 +169,7 @@ class TournamentErrorPage extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Check the bundled World Cup data and try again.',
+                  'Controleer de meegeleverde WK-gegevens en probeer opnieuw.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.mutedForeground,
@@ -219,17 +219,17 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
           NavigationDestination(
             icon: Icon(Icons.sports_soccer_outlined),
             selectedIcon: Icon(Icons.sports_soccer),
-            label: 'Matches',
+            label: 'Wedstrijden',
           ),
           NavigationDestination(
             icon: Icon(Icons.table_chart_outlined),
             selectedIcon: Icon(Icons.table_chart),
-            label: 'Groups',
+            label: 'Groepen',
           ),
           NavigationDestination(
             icon: Icon(Icons.emoji_events_outlined),
             selectedIcon: Icon(Icons.emoji_events),
-            label: 'Knockout',
+            label: 'Knock-out',
           ),
         ],
       ),
@@ -320,13 +320,13 @@ class MatchesTab extends StatefulWidget {
 }
 
 class _MatchesTabState extends State<MatchesTab> {
-  var _selectedFilter = 'All';
+  var _selectedFilter = 'Alles';
 
   @override
   Widget build(BuildContext context) {
     final filters = widget.tournament.stageFilters;
     if (!filters.contains(_selectedFilter)) {
-      _selectedFilter = 'All';
+      _selectedFilter = 'Alles';
     }
     final filteredMatches = _filterMatches(
       widget.tournament.matches,
@@ -347,7 +347,7 @@ class _MatchesTabState extends State<MatchesTab> {
           if (filteredMatches.isEmpty)
             const EmptyState(
               icon: Icons.sports_soccer_outlined,
-              message: 'No matches available',
+              message: 'Geen wedstrijden beschikbaar',
             )
           else
             for (final group in _groupByDate(filteredMatches))
@@ -358,7 +358,7 @@ class _MatchesTabState extends State<MatchesTab> {
   }
 
   List<DisplayMatch> _filterMatches(List<DisplayMatch> matches, String filter) {
-    if (filter == 'All') {
+    if (filter == 'Alles') {
       return matches;
     }
     return matches.where((match) => match.stage == filter).toList();
@@ -499,7 +499,7 @@ class DateGroupHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
-            '$count ${count == 1 ? 'match' : 'matches'}',
+            '$count ${count == 1 ? 'wedstrijd' : 'wedstrijden'}',
             style: const TextStyle(
               color: AppColors.accent,
               fontWeight: FontWeight.w700,
@@ -592,7 +592,7 @@ class MatchStatusColumn extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            match.isCompleted ? 'Final' : 'Kickoff',
+            match.isCompleted ? 'Einde' : 'Aftrap',
             style: TextStyle(
               color: match.isCompleted
                   ? AppColors.accent
@@ -616,16 +616,16 @@ class MatchMetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final groupLabel = match.group == null
         ? _shortStageLabel(match.stage)
-        : 'Group ${match.group}';
+        : 'Groep ${match.group}';
     return Row(children: [StageBadge(label: groupLabel)]);
   }
 
   String _shortStageLabel(String stage) {
     return switch (stage) {
-      'Round of 32' => 'R32',
-      'Round of 16' => 'R16',
-      'Quarter-finals' => 'QF',
-      'Semi-finals' => 'SF',
+      'Ronde van 32' => 'R32',
+      'Achtste finales' => 'R16',
+      'Kwartfinales' => 'QF',
+      'Halve finales' => 'SF',
       _ => stage,
     };
   }
@@ -811,7 +811,7 @@ class GroupsTab extends StatelessWidget {
           if (groups.isEmpty)
             const EmptyState(
               icon: Icons.table_chart_outlined,
-              message: 'No groups available',
+              message: 'Geen groepen beschikbaar',
             )
           else
             for (final group in groups) ...[
@@ -844,7 +844,7 @@ class GroupTable extends StatelessWidget {
                 StageBadge(label: group.name),
                 const SizedBox(width: 8),
                 const Text(
-                  'Standings',
+                  'Stand',
                   style: TextStyle(
                     color: AppColors.mutedForeground,
                     fontSize: 12,
@@ -882,12 +882,12 @@ class _StandingHeader extends StatelessWidget {
               ),
             ),
           ),
-          StandingCell(label: 'P', isHeader: true),
+          StandingCell(label: 'GS', isHeader: true),
           StandingCell(label: 'W', isHeader: true),
-          StandingCell(label: 'D', isHeader: true),
-          StandingCell(label: 'L', isHeader: true),
-          StandingCell(label: 'GD', isHeader: true),
-          StandingCell(label: 'Pts', isHeader: true),
+          StandingCell(label: 'G', isHeader: true),
+          StandingCell(label: 'V', isHeader: true),
+          StandingCell(label: 'DS', isHeader: true),
+          StandingCell(label: 'Ptn', isHeader: true),
         ],
       ),
     );
@@ -1002,7 +1002,7 @@ class QualificationNote extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Top 2 per group qualify. Best third-place teams advance.',
+              'De top 2 per groep plaatst zich. De beste nummers drie gaan door.',
               style: TextStyle(
                 color: AppColors.mutedForeground,
                 fontSize: 12,
@@ -1029,7 +1029,7 @@ class KnockoutTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Knockout bracket',
+            'Knock-outschema',
             style: TextStyle(
               color: AppColors.foreground,
               fontSize: 18,
@@ -1038,7 +1038,7 @@ class KnockoutTab extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Swipe sideways to follow each round.',
+            'Veeg opzij om elke ronde te volgen.',
             style: TextStyle(
               color: AppColors.mutedForeground,
               fontSize: 12,
@@ -1049,7 +1049,7 @@ class KnockoutTab extends StatelessWidget {
           if (matches.isEmpty)
             const EmptyState(
               icon: Icons.emoji_events_outlined,
-              message: 'No knockout matches available',
+              message: 'Geen knock-outwedstrijden beschikbaar',
             )
           else
             SingleChildScrollView(
@@ -1100,13 +1100,13 @@ class BracketTree extends StatelessWidget {
 }
 
 const _knockoutStages = [
-  'Round of 32',
-  'Round of 16',
-  'Quarter-finals',
-  'Semi-finals',
-  '3rd Place',
-  'Final',
-  'Knockout',
+  'Ronde van 32',
+  'Achtste finales',
+  'Kwartfinales',
+  'Halve finales',
+  '3e plaats',
+  'Finale',
+  'Knock-out',
 ];
 
 class BracketRoundColumn extends StatelessWidget {
@@ -1146,8 +1146,8 @@ class BracketRoundHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFinal = stage == 'Final';
-    final isPlacement = stage == '3rd Place';
+    final isFinal = stage == 'Finale';
+    final isPlacement = stage == '3e plaats';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -1204,7 +1204,7 @@ class BracketMatchCard extends StatelessWidget {
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: match.stage == 'Final'
+                  color: match.stage == 'Finale'
                       ? AppColors.accent
                       : AppColors.primary,
                   borderRadius: BorderRadius.circular(999),
@@ -1216,7 +1216,7 @@ class BracketMatchCard extends StatelessWidget {
                   Text(
                     match.date,
                     style: TextStyle(
-                      color: match.stage == 'Final'
+                      color: match.stage == 'Finale'
                           ? AppColors.accent
                           : AppColors.mutedForeground,
                       fontSize: 11,
@@ -1331,7 +1331,7 @@ class MatchDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Match detail'),
+        title: const Text('Wedstrijddetail'),
         backgroundColor: AppColors.background,
       ),
       body: SafeArea(
@@ -1347,7 +1347,7 @@ class MatchDetailPage extends StatelessWidget {
                     StageBadge(
                       label: match.group == null
                           ? match.stage
-                          : 'Group ${match.group}',
+                          : 'Groep ${match.group}',
                     ),
                     const SizedBox(height: 18),
                     Text(
@@ -1361,7 +1361,7 @@ class MatchDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      match.isCompleted ? 'Final score' : 'Scheduled kickoff',
+                      match.isCompleted ? 'Eindstand' : 'Geplande aftrap',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.mutedForeground,

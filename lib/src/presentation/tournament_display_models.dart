@@ -66,7 +66,7 @@ class DisplayMatch {
 
   String get detailResultText {
     if (!isCompleted || homeScore == null || awayScore == null) {
-      return '${home.name} vs ${away.name}';
+      return '${home.name} tegen ${away.name}';
     }
     return '${home.name} $homeScore - $awayScore ${away.name}';
   }

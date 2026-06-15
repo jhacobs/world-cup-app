@@ -40,7 +40,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Mexico'), findsOneWidget);
-    expect(find.text('South Africa'), findsOneWidget);
+    expect(find.text('Zuid-Afrika'), findsOneWidget);
     expect(find.text('2 - 1'), findsOneWidget);
     expect(find.textContaining('Mexico City Stadium'), findsNothing);
     expect(find.byKey(const ValueKey('match-card-match-001')), findsOneWidget);
@@ -48,10 +48,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('match-card-match-001')));
     await tester.pumpAndSettle();
 
-    expect(find.text('Match detail'), findsOneWidget);
-    expect(find.text('Final score'), findsOneWidget);
-    expect(find.text('Mexico 2 - 1 South Africa'), findsOneWidget);
-    expect(find.text('Group A'), findsOneWidget);
+    expect(find.text('Wedstrijddetail'), findsOneWidget);
+    expect(find.text('Eindstand'), findsOneWidget);
+    expect(find.text('Mexico 2 - 1 Zuid-Afrika'), findsOneWidget);
+    expect(find.text('Groep A'), findsOneWidget);
     expect(find.textContaining('Mexico City Stadium'), findsNothing);
     expect(find.text('Mexico City'), findsNothing);
   });
@@ -64,14 +64,14 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Groups'));
+    await tester.tap(find.text('Groepen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Group A'), findsOneWidget);
-    expect(find.text('Pts'), findsWidgets);
+    expect(find.text('Groep A'), findsOneWidget);
+    expect(find.text('Ptn'), findsWidgets);
     expect(find.byKey(const ValueKey('standing-row-1-Mexico')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('standing-row-2-South Africa')),
+      find.byKey(const ValueKey('standing-row-2-Zuid-Afrika')),
       findsOneWidget,
     );
     expect(find.text('0'), findsWidgets);
@@ -85,10 +85,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Knockout'));
+      await tester.tap(find.text('Knock-out'));
       await tester.pumpAndSettle();
 
-      expect(find.text('No knockout matches available'), findsOneWidget);
+      expect(
+        find.text('Geen knock-outwedstrijden beschikbaar'),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('knockout-bracket')), findsNothing);
     },
   );
@@ -101,9 +104,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Unable to load tournament data'), findsOneWidget);
+    expect(find.text('Kan toernooigegevens niet laden'), findsOneWidget);
     expect(
-      find.text('Check the bundled World Cup data and try again.'),
+      find.text('Controleer de meegeleverde WK-gegevens en probeer opnieuw.'),
       findsOneWidget,
     );
   });
@@ -116,7 +119,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Knockout'));
+      await tester.tap(find.text('Knock-out'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
@@ -124,8 +127,8 @@ void main() {
         find.byKey(const ValueKey('bracket-match-round-32-1')),
         findsOneWidget,
       );
-      expect(find.text('Winner Group A'), findsOneWidget);
-      expect(find.text('Runner-up Group B'), findsOneWidget);
+      expect(find.text('Winnaar groep A'), findsOneWidget);
+      expect(find.text('Nummer 2 groep B'), findsOneWidget);
     },
   );
 
@@ -137,17 +140,17 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Knockout'));
+    await tester.tap(find.text('Knock-out'));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
     expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
     expect(
-      find.byKey(const ValueKey('bracket-round-Round of 32')),
+      find.byKey(const ValueKey('bracket-round-Ronde van 32')),
       findsOneWidget,
     );
     expect(
-      find.byKey(const ValueKey('bracket-round-Round of 16')),
+      find.byKey(const ValueKey('bracket-round-Achtste finales')),
       findsOneWidget,
     );
   });
@@ -160,7 +163,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Knockout'));
+    await tester.tap(find.text('Knock-out'));
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
@@ -176,7 +179,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       const MaterialApp(
-        home: Scaffold(body: BracketRoundHeader(stage: 'Round of 32')),
+        home: Scaffold(body: BracketRoundHeader(stage: 'Ronde van 32')),
       ),
     );
 
@@ -187,7 +190,7 @@ void main() {
     final container = tester.widget<Container>(containerFinder);
     final decoration = container.decoration! as BoxDecoration;
     final border = decoration.border! as Border;
-    final label = tester.widget<Text>(find.text('Round of 32'));
+    final label = tester.widget<Text>(find.text('Ronde van 32'));
 
     expect(decoration.color, AppColors.card);
     expect(decoration.borderRadius, BorderRadius.circular(18));

@@ -24,10 +24,10 @@ void main() {
       final localKickoff = DateTime.utc(2026, 6, 11, 19).toLocal();
 
       expect(match.id, 'match-001');
-      expect(match.stage, 'Group Stage');
+      expect(match.stage, 'Groepsfase');
       expect(match.group, 'A');
       expect(match.home.name, 'Mexico');
-      expect(match.away.name, 'South Africa');
+      expect(match.away.name, 'Zuid-Afrika');
       expect(match.date, '${_month(localKickoff.month)} ${localKickoff.day}');
       expect(match.dayOfWeek, _weekday(localKickoff.weekday));
       expect(match.time, _time(localKickoff));
@@ -57,7 +57,7 @@ void main() {
 
       expect(match.isCompleted, isTrue);
       expect(match.resultText, '2 - 1');
-      expect(match.detailResultText, 'Mexico 2 - 1 South Africa');
+      expect(match.detailResultText, 'Mexico 2 - 1 Zuid-Afrika');
       expect(match.isHomeWinner, isTrue);
       expect(match.isAwayWinner, isFalse);
     });
@@ -84,18 +84,18 @@ void main() {
 
       final display = mapTournamentToDisplay(tournament);
 
-      expect(display.knockoutMatches.first.stage, 'Round of 32');
-      expect(display.knockoutMatches.first.home.name, 'Winner Group A');
-      expect(display.knockoutMatches.first.away.name, 'Runner-up Group B');
-      expect(display.knockoutMatches.last.stage, 'Round of 16');
-      expect(display.knockoutMatches.last.home.name, 'TBD');
-      expect(display.knockoutMatches.last.away.name, 'TBD');
+      expect(display.knockoutMatches.first.stage, 'Ronde van 32');
+      expect(display.knockoutMatches.first.home.name, 'Winnaar groep A');
+      expect(display.knockoutMatches.first.away.name, 'Nummer 2 groep B');
+      expect(display.knockoutMatches.last.stage, 'Achtste finales');
+      expect(display.knockoutMatches.last.home.name, 'N.t.b.');
+      expect(display.knockoutMatches.last.away.name, 'N.t.b.');
     });
 
     test('creates zeroed group standings when standing data is absent', () {
       final display = mapTournamentToDisplay(_tournament(matches: const []));
 
-      expect(display.groups.single.name, 'Group A');
+      expect(display.groups.single.name, 'Groep A');
       expect(display.groups.single.standings, hasLength(2));
       expect(display.groups.single.standings.first.team.name, 'Mexico');
       expect(display.groups.single.standings.first.played, 0);
@@ -158,7 +158,7 @@ String _month(int month) {
     'Feb',
     'Mar',
     'Apr',
-    'May',
+    'Mei',
     'Jun',
     'Jul',
     'Aug',
@@ -171,13 +171,13 @@ String _month(int month) {
 
 String _weekday(int weekday) {
   return const [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
+    'Maandag',
+    'Dinsdag',
+    'Woensdag',
+    'Donderdag',
+    'Vrijdag',
+    'Zaterdag',
+    'Zondag',
   ][weekday - 1];
 }
 

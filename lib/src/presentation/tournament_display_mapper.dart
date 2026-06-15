@@ -23,7 +23,7 @@ DisplayTournament mapTournamentToDisplay(Tournament tournament) {
   return DisplayTournament(
     title: tournament.info.name.replaceFirst('FIFA ', ''),
     subtitle:
-        '${_dateRange(tournament.info.startDate, tournament.info.endDate)} · USA, Canada & Mexico',
+        '${_dateRange(tournament.info.startDate, tournament.info.endDate)} · VS, Canada en Mexico',
     matches: List.unmodifiable(matches),
     groups: [
       for (final group in tournament.groups)
@@ -78,7 +78,7 @@ DisplayGroup _mapGroup(
 
   return DisplayGroup(
     id: group.id,
-    name: group.name,
+    name: _groupName(group.name),
     standings: [
       for (final teamId in group.teamIds)
         _mapStanding(teamsById[teamId], entriesByTeamId[teamId]),
@@ -108,43 +108,99 @@ DisplayTeam _mapMatchTeam({
     return _mapTeam(team);
   }
 
-  final name = placeholder ?? 'TBD';
+  final name = _placeholderName(placeholder);
   return DisplayTeam(id: name, name: name, code: name);
 }
 
 DisplayTeam _mapTeam(Team? team) {
   if (team == null) {
-    return const DisplayTeam(id: 'TBD', name: 'TBD', code: 'TBD');
+    return const DisplayTeam(id: 'N.t.b.', name: 'N.t.b.', code: 'N.t.b.');
   }
 
-  return DisplayTeam(id: team.id, name: team.name, code: team.shortName);
+  return DisplayTeam(
+    id: team.id,
+    name: _teamDisplayName(team),
+    code: team.shortName,
+  );
 }
+
+String _teamDisplayName(Team team) {
+  return _dutchTeamNames[team.id] ?? team.name;
+}
+
+const _dutchTeamNames = {
+  'algeria': 'Algerije',
+  'argentina': 'Argentinië',
+  'australia': 'Australië',
+  'austria': 'Oostenrijk',
+  'belgium': 'België',
+  'bosnia-herzegovina': 'Bosnië en Herzegovina',
+  'brazil': 'Brazilië',
+  'cape-verde-islands': 'Kaapverdië',
+  'colombia': 'Colombia',
+  'congo-dr': 'DR Congo',
+  'croatia': 'Kroatië',
+  'czechia': 'Tsjechië',
+  'egypt': 'Egypte',
+  'england': 'Engeland',
+  'france': 'Frankrijk',
+  'germany': 'Duitsland',
+  'ghana': 'Ghana',
+  'haiti': 'Haïti',
+  'iran': 'Iran',
+  'iraq': 'Irak',
+  'ivory-coast': 'Ivoorkust',
+  'japan': 'Japan',
+  'jordan': 'Jordanië',
+  'mexico': 'Mexico',
+  'morocco': 'Marokko',
+  'netherlands': 'Nederland',
+  'new-zealand': 'Nieuw-Zeeland',
+  'norway': 'Noorwegen',
+  'panama': 'Panama',
+  'paraguay': 'Paraguay',
+  'portugal': 'Portugal',
+  'qatar': 'Qatar',
+  'saudi-arabia': 'Saoedi-Arabië',
+  'scotland': 'Schotland',
+  'senegal': 'Senegal',
+  'south-africa': 'Zuid-Afrika',
+  'south-korea': 'Zuid-Korea',
+  'spain': 'Spanje',
+  'sweden': 'Zweden',
+  'switzerland': 'Zwitserland',
+  'tunisia': 'Tunesië',
+  'turkey': 'Turkije',
+  'united-states': 'Verenigde Staten',
+  'uruguay': 'Uruguay',
+  'uzbekistan': 'Oezbekistan',
+};
 
 String _stageLabel(Match match) {
   if (match.stage == TournamentStage.group) {
-    return 'Group Stage';
+    return 'Groepsfase';
   }
 
   final id = match.id.toLowerCase();
   if (id.contains('round-32')) {
-    return 'Round of 32';
+    return 'Ronde van 32';
   }
   if (id.contains('round-16')) {
-    return 'Round of 16';
+    return 'Achtste finales';
   }
   if (id.contains('quarter')) {
-    return 'Quarter-finals';
+    return 'Kwartfinales';
   }
   if (id.contains('semi')) {
-    return 'Semi-finals';
+    return 'Halve finales';
   }
   if (id.contains('third') || id.contains('3rd')) {
-    return '3rd Place';
+    return '3e plaats';
   }
   if (id.contains('final')) {
-    return 'Final';
+    return 'Finale';
   }
-  return 'Knockout';
+  return 'Knock-out';
 }
 
 List<String> _stageFilters(List<DisplayMatch> matches) {
@@ -152,7 +208,7 @@ List<String> _stageFilters(List<DisplayMatch> matches) {
   for (final match in matches) {
     stages.add(match.stage);
   }
-  return ['All', ...stages];
+  return ['Alles', ...stages];
 }
 
 String? _groupShortName(String? groupName) {
@@ -160,6 +216,30 @@ String? _groupShortName(String? groupName) {
     return null;
   }
   return groupName.replaceFirst('Group ', '');
+}
+
+String _groupName(String groupName) {
+  return groupName.replaceFirst('Group ', 'Groep ');
+}
+
+String _placeholderName(String? placeholder) {
+  if (placeholder == null || placeholder == 'TBD') {
+    return 'N.t.b.';
+  }
+
+  final winnerMatch = RegExp(r'^Winner Group ([A-Z])$').firstMatch(placeholder);
+  if (winnerMatch != null) {
+    return 'Winnaar groep ${winnerMatch.group(1)}';
+  }
+
+  final runnerUpMatch = RegExp(
+    r'^Runner-up Group ([A-Z])$',
+  ).firstMatch(placeholder);
+  if (runnerUpMatch != null) {
+    return 'Nummer 2 groep ${runnerUpMatch.group(1)}';
+  }
+
+  return placeholder;
 }
 
 String _dateRange(DateTime start, DateTime end) {
@@ -176,7 +256,7 @@ String _month(int month) {
     'Feb',
     'Mar',
     'Apr',
-    'May',
+    'Mei',
     'Jun',
     'Jul',
     'Aug',
@@ -189,13 +269,13 @@ String _month(int month) {
 
 String _weekday(int weekday) {
   return const [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday',
+    'Maandag',
+    'Dinsdag',
+    'Woensdag',
+    'Donderdag',
+    'Vrijdag',
+    'Zaterdag',
+    'Zondag',
   ][weekday - 1];
 }
 
