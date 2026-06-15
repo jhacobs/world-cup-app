@@ -15,10 +15,11 @@ void main() {
     final tournament = Tournament.fromJson(decoded);
 
     expect(tournament.info.id, 'world-cup-2026');
-    expect(tournament.teams.length, greaterThanOrEqualTo(2));
-    expect(tournament.groups.length, greaterThanOrEqualTo(1));
+    expect(tournament.teams.length, 48);
+    expect(tournament.groups.length, 12);
     expect(tournament.venues.length, greaterThanOrEqualTo(1));
-    expect(tournament.matches.length, greaterThanOrEqualTo(1));
+    expect(tournament.matches.length, 104);
+    expect(tournament.groupStandings.length, 12);
 
     final venueIds = tournament.venues.map((venue) => venue.id).toSet();
     final teamIds = tournament.teams.map((team) => team.id).toSet();
@@ -27,6 +28,7 @@ void main() {
     final groupsById = {for (final group in tournament.groups) group.id: group};
 
     for (final team in tournament.teams) {
+      expect(team.providerId, isNotNull);
       _expectOptionalGroupIdExists(groupIds, team.groupId);
       final groupId = team.groupId;
       if (groupId != null) {
@@ -35,6 +37,7 @@ void main() {
     }
 
     for (final match in tournament.matches) {
+      expect(match.providerId, isNotNull);
       expect(venueIds, contains(match.venueId));
       _expectOptionalGroupIdExists(groupIds, match.groupId);
       _expectOptionalTeamIdExists(teamIds, match.homeTeamId);
@@ -45,6 +48,13 @@ void main() {
       for (final teamId in group.teamIds) {
         expect(teamIds, contains(teamId));
         expect(teamsById[teamId]?.groupId, group.id);
+      }
+    }
+
+    for (final standing in tournament.groupStandings) {
+      expect(groupIds, contains(standing.groupId));
+      for (final entry in standing.entries) {
+        expect(teamIds, contains(entry.teamId));
       }
     }
   });

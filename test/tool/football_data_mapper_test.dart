@@ -66,6 +66,38 @@ void main() {
       expect(match['winnerTeamId'], isNull);
     });
 
+    test('maps timed knockout match with unknown teams', () {
+      final baseline = _baseline();
+      baseline['matches'] = [
+        {'id': 'match-001', 'providerId': 497000},
+        {'id': 'final', 'providerId': 497104},
+      ];
+      final mapper = FootballDataMapper.fromBaseline(baseline);
+
+      final update = mapper.mapMatchesResponse({
+        'matches': [
+          {
+            'id': 497104,
+            'status': 'TIMED',
+            'score': {
+              'winner': null,
+              'fullTime': {'home': null, 'away': null},
+            },
+            'homeTeam': {'id': null},
+            'awayTeam': {'id': null},
+          },
+        ],
+      });
+      final match =
+          (update['matches'] as List<Object?>).single as Map<String, Object?>;
+
+      expect(match['matchId'], 'final');
+      expect(match['status'], 'scheduled');
+      expect(match['homeScore'], isNull);
+      expect(match['awayScore'], isNull);
+      expect(match['winnerTeamId'], isNull);
+    });
+
     test('throws when provider match is not in baseline', () {
       final mapper = FootballDataMapper.fromBaseline(_baseline());
 
@@ -258,6 +290,33 @@ void main() {
           ],
         },
       ]);
+    });
+
+    test('maps standings response with provider display group names', () {
+      final mapper = FootballDataMapper.fromBaseline(_baseline());
+
+      final standings = mapper.mapStandingsResponse({
+        'standings': [
+          {
+            'group': 'Group A',
+            'table': [
+              {
+                'team': {'id': 100},
+                'playedGames': 1,
+                'won': 1,
+                'draw': 0,
+                'lost': 0,
+                'goalsFor': 2,
+                'goalsAgainst': 1,
+                'goalDifference': 1,
+                'points': 3,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(standings.single['groupId'], 'group-a');
     });
 
     test('maps baseline groups A-L including GROUP_L to group-l', () {

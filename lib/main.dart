@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import 'src/data/tournament_asset_data_source.dart';
+import 'src/data/tournament_models.dart';
+import 'src/data/tournament_repository.dart';
+import 'src/data/world_cup_data_config.dart';
+import 'src/presentation/tournament_display_mapper.dart';
+import 'src/presentation/tournament_display_models.dart';
+
+typedef TournamentLoader = Future<Tournament> Function();
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.tournamentLoader});
+
+  final TournamentLoader? tournamentLoader;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +65,18 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const TournamentHomePage(),
+      home: TournamentLoaderPage(
+        tournamentLoader: tournamentLoader ?? _defaultTournamentLoader,
+      ),
     );
+  }
+
+  static Future<Tournament> _defaultTournamentLoader() {
+    final repository = TournamentRepository(
+      config: WorldCupDataConfig.fromEnvironment(),
+      loadAssetString: TournamentAssetDataSource(rootBundle).load,
+    );
+    return repository.loadTournament();
   }
 }
 
@@ -75,356 +97,99 @@ class AppColors {
 
 enum TournamentTab { matches, groups, knockout }
 
-enum SampleMatchStatus { scheduled, completed }
+class TournamentLoaderPage extends StatefulWidget {
+  const TournamentLoaderPage({super.key, required this.tournamentLoader});
 
-class SampleTeam {
-  const SampleTeam({
-    required this.name,
-    required this.code,
-    required this.flag,
-  });
+  final TournamentLoader tournamentLoader;
 
-  final String name;
-  final String code;
-  final String flag;
+  @override
+  State<TournamentLoaderPage> createState() => _TournamentLoaderPageState();
 }
 
-class SampleMatch {
-  const SampleMatch({
-    required this.id,
-    required this.stage,
-    this.group,
-    required this.date,
-    required this.dayOfWeek,
-    required this.time,
-    required this.venue,
-    required this.city,
-    required this.home,
-    required this.away,
-    required this.status,
-    this.homeScore,
-    this.awayScore,
-  });
+class _TournamentLoaderPageState extends State<TournamentLoaderPage> {
+  late final Future<DisplayTournament> _tournamentFuture;
 
-  final String id;
-  final String stage;
-  final String? group;
-  final String date;
-  final String dayOfWeek;
-  final String time;
-  final String venue;
-  final String city;
-  final SampleTeam home;
-  final SampleTeam away;
-  final SampleMatchStatus status;
-  final int? homeScore;
-  final int? awayScore;
-
-  bool get isCompleted => status == SampleMatchStatus.completed;
-
-  String get title => '${home.name} vs ${away.name}';
-
-  String get resultText {
-    if (!isCompleted) {
-      return time;
-    }
-    return '$homeScore - $awayScore';
+  @override
+  void initState() {
+    super.initState();
+    _tournamentFuture = widget.tournamentLoader().then(mapTournamentToDisplay);
   }
 
-  String get detailResultText {
-    if (!isCompleted) {
-      return '${home.name} vs ${away.name}';
-    }
-    return '${home.name} $homeScore - $awayScore ${away.name}';
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<DisplayTournament>(
+      future: _tournamentFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const LoadingTournamentPage();
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const TournamentErrorPage();
+        }
+        return TournamentHomePage(tournament: snapshot.requireData);
+      },
+    );
   }
 }
 
-class SampleStanding {
-  const SampleStanding({
-    required this.team,
-    required this.played,
-    required this.won,
-    required this.drawn,
-    required this.lost,
-    required this.goalDifference,
-    required this.points,
-  });
+class LoadingTournamentPage extends StatelessWidget {
+  const LoadingTournamentPage({super.key});
 
-  final SampleTeam team;
-  final int played;
-  final int won;
-  final int drawn;
-  final int lost;
-  final int goalDifference;
-  final int points;
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(child: Center(child: CircularProgressIndicator())),
+    );
+  }
 }
 
-const mexico = SampleTeam(name: 'Mexico', code: 'MEX', flag: 'MEX');
-const poland = SampleTeam(name: 'Poland', code: 'POL', flag: 'POL');
-const ecuador = SampleTeam(name: 'Ecuador', code: 'ECU', flag: 'ECU');
-const saudiArabia = SampleTeam(name: 'Saudi Arabia', code: 'KSA', flag: 'KSA');
-const spain = SampleTeam(name: 'Spain', code: 'ESP', flag: 'ESP');
-const germany = SampleTeam(name: 'Germany', code: 'GER', flag: 'GER');
-const senegal = SampleTeam(name: 'Senegal', code: 'SEN', flag: 'SEN');
-const australia = SampleTeam(name: 'Australia', code: 'AUS', flag: 'AUS');
-const tbd = SampleTeam(name: 'TBD', code: 'TBD', flag: 'TBD');
-const winnerGroupA = SampleTeam(name: 'Winner Group A', code: '1A', flag: '1A');
-const runnerUpGroupB = SampleTeam(
-  name: 'Runner-up Group B',
-  code: '2B',
-  flag: '2B',
-);
+class TournamentErrorPage extends StatelessWidget {
+  const TournamentErrorPage({super.key});
 
-const sampleMatches = [
-  SampleMatch(
-    id: 'mexico-poland',
-    stage: 'Group Stage',
-    group: 'A',
-    date: 'Jun 11',
-    dayOfWeek: 'Thursday',
-    time: '17:00',
-    venue: 'Estadio Azteca',
-    city: 'Mexico City',
-    home: mexico,
-    away: poland,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'ecuador-saudi-arabia',
-    stage: 'Group Stage',
-    group: 'A',
-    date: 'Jun 11',
-    dayOfWeek: 'Thursday',
-    time: '20:00',
-    venue: 'SoFi Stadium',
-    city: 'Los Angeles',
-    home: ecuador,
-    away: saudiArabia,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'spain-germany',
-    stage: 'Group Stage',
-    group: 'E',
-    date: 'Jun 17',
-    dayOfWeek: 'Wednesday',
-    time: '16:00',
-    venue: 'Mercedes-Benz Stadium',
-    city: 'Atlanta',
-    home: spain,
-    away: germany,
-    status: SampleMatchStatus.completed,
-    homeScore: 2,
-    awayScore: 1,
-  ),
-  SampleMatch(
-    id: 'senegal-australia',
-    stage: 'Group Stage',
-    group: 'E',
-    date: 'Jun 21',
-    dayOfWeek: 'Sunday',
-    time: '18:00',
-    venue: 'Estadio Akron',
-    city: 'Guadalajara',
-    home: senegal,
-    away: australia,
-    status: SampleMatchStatus.completed,
-    homeScore: 0,
-    awayScore: 0,
-  ),
-];
-
-const knockoutMatches = [
-  SampleMatch(
-    id: 'round-32-1',
-    stage: 'Round of 32',
-    date: 'Jul 4',
-    dayOfWeek: 'Saturday',
-    time: 'TBD',
-    venue: 'MetLife Stadium',
-    city: 'New York',
-    home: winnerGroupA,
-    away: runnerUpGroupB,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'round-32-2',
-    stage: 'Round of 32',
-    date: 'Jul 5',
-    dayOfWeek: 'Sunday',
-    time: 'TBD',
-    venue: 'Lumen Field',
-    city: 'Seattle',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'round-16-1',
-    stage: 'Round of 16',
-    date: 'Jul 8',
-    dayOfWeek: 'Wednesday',
-    time: 'TBD',
-    venue: 'AT&T Stadium',
-    city: 'Dallas',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'quarter-final-1',
-    stage: 'Quarter-finals',
-    date: 'Jul 14',
-    dayOfWeek: 'Tuesday',
-    time: 'TBD',
-    venue: 'Hard Rock Stadium',
-    city: 'Miami',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'semi-final-1',
-    stage: 'Semi-finals',
-    date: 'Jul 18',
-    dayOfWeek: 'Saturday',
-    time: 'TBD',
-    venue: 'MetLife Stadium',
-    city: 'New York',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'third-place',
-    stage: '3rd Place',
-    date: 'Jul 18',
-    dayOfWeek: 'Saturday',
-    time: '18:00',
-    venue: 'Hard Rock Stadium',
-    city: 'Miami',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-  SampleMatch(
-    id: 'final',
-    stage: 'Final',
-    date: 'Jul 19',
-    dayOfWeek: 'Sunday',
-    time: '18:00',
-    venue: 'MetLife Stadium',
-    city: 'New York',
-    home: tbd,
-    away: tbd,
-    status: SampleMatchStatus.scheduled,
-  ),
-];
-
-const stageFilters = [
-  'All',
-  'Group Stage',
-  'Round of 32',
-  'Round of 16',
-  'Quarter-finals',
-  'Semi-finals',
-  '3rd Place',
-  'Final',
-];
-
-const knockoutStageFilters = [
-  'All',
-  'Round of 32',
-  'Round of 16',
-  'Quarter-finals',
-  'Semi-finals',
-  '3rd Place',
-  'Final',
-];
-
-const allPreviewMatches = [...sampleMatches, ...knockoutMatches];
-
-const groupStandings = {
-  'Group A': [
-    SampleStanding(
-      team: mexico,
-      played: 1,
-      won: 1,
-      drawn: 0,
-      lost: 0,
-      goalDifference: 2,
-      points: 3,
-    ),
-    SampleStanding(
-      team: poland,
-      played: 1,
-      won: 0,
-      drawn: 0,
-      lost: 1,
-      goalDifference: -2,
-      points: 0,
-    ),
-    SampleStanding(
-      team: ecuador,
-      played: 0,
-      won: 0,
-      drawn: 0,
-      lost: 0,
-      goalDifference: 0,
-      points: 0,
-    ),
-    SampleStanding(
-      team: saudiArabia,
-      played: 0,
-      won: 0,
-      drawn: 0,
-      lost: 0,
-      goalDifference: 0,
-      points: 0,
-    ),
-  ],
-  'Group E': [
-    SampleStanding(
-      team: spain,
-      played: 1,
-      won: 1,
-      drawn: 0,
-      lost: 0,
-      goalDifference: 1,
-      points: 3,
-    ),
-    SampleStanding(
-      team: australia,
-      played: 1,
-      won: 0,
-      drawn: 1,
-      lost: 0,
-      goalDifference: 0,
-      points: 1,
-    ),
-    SampleStanding(
-      team: senegal,
-      played: 1,
-      won: 0,
-      drawn: 1,
-      lost: 0,
-      goalDifference: 0,
-      points: 1,
-    ),
-    SampleStanding(
-      team: germany,
-      played: 1,
-      won: 0,
-      drawn: 0,
-      lost: 1,
-      goalDifference: -1,
-      points: 0,
-    ),
-  ],
-};
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, color: AppColors.accent, size: 34),
+                SizedBox(height: 12),
+                Text(
+                  'Unable to load tournament data',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.foreground,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'Check the bundled World Cup data and try again.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.mutedForeground,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class TournamentHomePage extends StatefulWidget {
-  const TournamentHomePage({super.key});
+  const TournamentHomePage({super.key, required this.tournament});
+
+  final DisplayTournament tournament;
 
   @override
   State<TournamentHomePage> createState() => _TournamentHomePageState();
@@ -440,7 +205,7 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const TournamentHeader(),
+            TournamentHeader(tournament: widget.tournament),
             Expanded(child: _buildCurrentTab()),
           ],
         ),
@@ -473,15 +238,19 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
 
   Widget _buildCurrentTab() {
     return switch (_selectedTab) {
-      TournamentTab.matches => const MatchesTab(),
-      TournamentTab.groups => const GroupsTab(),
-      TournamentTab.knockout => const KnockoutTab(),
+      TournamentTab.matches => MatchesTab(tournament: widget.tournament),
+      TournamentTab.groups => GroupsTab(groups: widget.tournament.groups),
+      TournamentTab.knockout => KnockoutTab(
+        matches: widget.tournament.knockoutMatches,
+      ),
     };
   }
 }
 
 class TournamentHeader extends StatelessWidget {
-  const TournamentHeader({super.key});
+  const TournamentHeader({super.key, required this.tournament});
+
+  final DisplayTournament tournament;
 
   @override
   Widget build(BuildContext context) {
@@ -495,7 +264,7 @@ class TournamentHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'World Cup 2026',
+            tournament.title,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: AppColors.foreground,
               fontWeight: FontWeight.w900,
@@ -503,9 +272,12 @@ class TournamentHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Jun 11 - Jul 19 · USA, Canada & Mexico',
-            style: TextStyle(color: AppColors.mutedForeground, fontSize: 12),
+          Text(
+            tournament.subtitle,
+            style: const TextStyle(
+              color: AppColors.mutedForeground,
+              fontSize: 12,
+            ),
           ),
           const SizedBox(height: 12),
           const Row(
@@ -539,7 +311,9 @@ class TournamentHeader extends StatelessWidget {
 }
 
 class MatchesTab extends StatefulWidget {
-  const MatchesTab({super.key});
+  const MatchesTab({super.key, required this.tournament});
+
+  final DisplayTournament tournament;
 
   @override
   State<MatchesTab> createState() => _MatchesTabState();
@@ -550,7 +324,14 @@ class _MatchesTabState extends State<MatchesTab> {
 
   @override
   Widget build(BuildContext context) {
-    final filteredMatches = _filterMatches(allPreviewMatches, _selectedFilter);
+    final filters = widget.tournament.stageFilters;
+    if (!filters.contains(_selectedFilter)) {
+      _selectedFilter = 'All';
+    }
+    final filteredMatches = _filterMatches(
+      widget.tournament.matches,
+      _selectedFilter,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
@@ -558,19 +339,25 @@ class _MatchesTabState extends State<MatchesTab> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           FilterChips(
-            labels: stageFilters,
+            labels: filters,
             selectedLabel: _selectedFilter,
             onSelected: (label) => setState(() => _selectedFilter = label),
           ),
           const SizedBox(height: 12),
-          for (final group in _groupByDate(filteredMatches))
-            DateMatchGroup(matches: group),
+          if (filteredMatches.isEmpty)
+            const EmptyState(
+              icon: Icons.sports_soccer_outlined,
+              message: 'No matches available',
+            )
+          else
+            for (final group in _groupByDate(filteredMatches))
+              DateMatchGroup(matches: group),
         ],
       ),
     );
   }
 
-  List<SampleMatch> _filterMatches(List<SampleMatch> matches, String filter) {
+  List<DisplayMatch> _filterMatches(List<DisplayMatch> matches, String filter) {
     if (filter == 'All') {
       return matches;
     }
@@ -624,8 +411,8 @@ class FilterChips extends StatelessWidget {
   }
 }
 
-List<List<SampleMatch>> _groupByDate(List<SampleMatch> matches) {
-  final groups = <String, List<SampleMatch>>{};
+List<List<DisplayMatch>> _groupByDate(List<DisplayMatch> matches) {
+  final groups = <String, List<DisplayMatch>>{};
   for (final match in matches) {
     final key = '${match.dayOfWeek}|${match.date}';
     groups.putIfAbsent(key, () => []).add(match);
@@ -636,7 +423,7 @@ List<List<SampleMatch>> _groupByDate(List<SampleMatch> matches) {
 class DateMatchGroup extends StatelessWidget {
   const DateMatchGroup({super.key, required this.matches});
 
-  final List<SampleMatch> matches;
+  final List<DisplayMatch> matches;
 
   @override
   Widget build(BuildContext context) {
@@ -728,7 +515,7 @@ class DateGroupHeader extends StatelessWidget {
 class MatchCard extends StatelessWidget {
   const MatchCard({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
@@ -756,8 +543,8 @@ class MatchCard extends StatelessWidget {
                       const SizedBox(height: 10),
                       MatchupRow(
                         match: match,
-                        isHomeWinner: _isHomeWinner(),
-                        isAwayWinner: _isAwayWinner(),
+                        isHomeWinner: match.isHomeWinner,
+                        isAwayWinner: match.isAwayWinner,
                       ),
                     ],
                   ),
@@ -769,20 +556,12 @@ class MatchCard extends StatelessWidget {
       ),
     );
   }
-
-  bool _isHomeWinner() {
-    return match.isCompleted && (match.homeScore ?? 0) > (match.awayScore ?? 0);
-  }
-
-  bool _isAwayWinner() {
-    return match.isCompleted && (match.awayScore ?? 0) > (match.homeScore ?? 0);
-  }
 }
 
 class MatchStatusColumn extends StatelessWidget {
   const MatchStatusColumn({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
@@ -831,29 +610,14 @@ class MatchStatusColumn extends StatelessWidget {
 class MatchMetaRow extends StatelessWidget {
   const MatchMetaRow({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
     final groupLabel = match.group == null
         ? _shortStageLabel(match.stage)
         : 'Group ${match.group}';
-    return Row(
-      children: [
-        StageBadge(label: groupLabel),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '${match.venue}, ${match.city}',
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.mutedForeground,
-              fontSize: 12,
-            ),
-          ),
-        ),
-      ],
-    );
+    return Row(children: [StageBadge(label: groupLabel)]);
   }
 
   String _shortStageLabel(String stage) {
@@ -900,7 +664,7 @@ class MatchupRow extends StatelessWidget {
     required this.isAwayWinner,
   });
 
-  final SampleMatch match;
+  final DisplayMatch match;
   final bool isHomeWinner;
   final bool isAwayWinner;
 
@@ -934,7 +698,7 @@ class MatchupRow extends StatelessWidget {
 class MatchCenterScore extends StatelessWidget {
   const MatchCenterScore({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
@@ -969,7 +733,7 @@ class MatchupTeamName extends StatelessWidget {
     required this.textAlign,
   });
 
-  final SampleTeam team;
+  final DisplayTeam team;
   final bool isWinner;
   final TextAlign textAlign;
 
@@ -1008,7 +772,7 @@ class MatchupTeamName extends StatelessWidget {
 class TeamCodeBadge extends StatelessWidget {
   const TeamCodeBadge({super.key, required this.team});
 
-  final SampleTeam team;
+  final DisplayTeam team;
 
   @override
   Widget build(BuildContext context) {
@@ -1021,7 +785,7 @@ class TeamCodeBadge extends StatelessWidget {
         border: Border.all(color: AppColors.border),
       ),
       child: Text(
-        team.flag,
+        team.code,
         textAlign: TextAlign.center,
         style: const TextStyle(
           color: AppColors.foreground,
@@ -1034,7 +798,9 @@ class TeamCodeBadge extends StatelessWidget {
 }
 
 class GroupsTab extends StatelessWidget {
-  const GroupsTab({super.key});
+  const GroupsTab({super.key, required this.groups});
+
+  final List<DisplayGroup> groups;
 
   @override
   Widget build(BuildContext context) {
@@ -1042,11 +808,17 @@ class GroupsTab extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       child: Column(
         children: [
-          for (final entry in groupStandings.entries) ...[
-            GroupTable(groupName: entry.key, standings: entry.value),
-            const SizedBox(height: 14),
-          ],
-          const QualificationNote(),
+          if (groups.isEmpty)
+            const EmptyState(
+              icon: Icons.table_chart_outlined,
+              message: 'No groups available',
+            )
+          else
+            for (final group in groups) ...[
+              GroupTable(group: group),
+              const SizedBox(height: 14),
+            ],
+          if (groups.isNotEmpty) const QualificationNote(),
         ],
       ),
     );
@@ -1054,14 +826,9 @@ class GroupsTab extends StatelessWidget {
 }
 
 class GroupTable extends StatelessWidget {
-  const GroupTable({
-    super.key,
-    required this.groupName,
-    required this.standings,
-  });
+  const GroupTable({super.key, required this.group});
 
-  final String groupName;
-  final List<SampleStanding> standings;
+  final DisplayGroup group;
 
   @override
   Widget build(BuildContext context) {
@@ -1074,7 +841,7 @@ class GroupTable extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                StageBadge(label: groupName),
+                StageBadge(label: group.name),
                 const SizedBox(width: 8),
                 const Text(
                   'Standings',
@@ -1088,7 +855,7 @@ class GroupTable extends StatelessWidget {
             ),
           ),
           const _StandingHeader(),
-          for (final (index, standing) in standings.indexed)
+          for (final (index, standing) in group.standings.indexed)
             StandingRow(standing: standing, rank: index + 1),
         ],
       ),
@@ -1130,7 +897,7 @@ class _StandingHeader extends StatelessWidget {
 class StandingRow extends StatelessWidget {
   const StandingRow({super.key, required this.standing, required this.rank});
 
-  final SampleStanding standing;
+  final DisplayStanding standing;
   final int rank;
 
   @override
@@ -1250,7 +1017,9 @@ class QualificationNote extends StatelessWidget {
 }
 
 class KnockoutTab extends StatelessWidget {
-  const KnockoutTab({super.key});
+  const KnockoutTab({super.key, required this.matches});
+
+  final List<DisplayMatch> matches;
 
   @override
   Widget build(BuildContext context) {
@@ -1277,115 +1046,68 @@ class KnockoutTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          SingleChildScrollView(
-            key: const ValueKey('knockout-bracket'),
-            scrollDirection: Axis.horizontal,
-            child: BracketTree(matches: knockoutMatches),
-          ),
+          if (matches.isEmpty)
+            const EmptyState(
+              icon: Icons.emoji_events_outlined,
+              message: 'No knockout matches available',
+            )
+          else
+            SingleChildScrollView(
+              key: const ValueKey('knockout-bracket'),
+              scrollDirection: Axis.horizontal,
+              child: BracketTree(matches: matches),
+            ),
         ],
       ),
     );
   }
-}
-
-class BracketSlot {
-  const BracketSlot({
-    required this.match,
-    required this.stage,
-    required this.left,
-    required this.top,
-  });
-
-  final SampleMatch match;
-  final String stage;
-  final double left;
-  final double top;
 }
 
 class BracketTree extends StatelessWidget {
   const BracketTree({super.key, required this.matches});
 
-  static const _columnWidth = 178.0;
-  static const _columnGap = 52.0;
-  static const _headerHeight = 34.0;
-  static const _headerGap = 18.0;
-  static const _cardHeight = 132.0;
-  static const _canvasHeight = 560.0;
-
-  final List<SampleMatch> matches;
+  final List<DisplayMatch> matches;
 
   @override
   Widget build(BuildContext context) {
-    final stages = knockoutStageFilters
-        .where((stage) => stage != 'All')
-        .toList(growable: false);
-    final slots = _buildSlots();
-    final width =
-        stages.length * _columnWidth + (stages.length - 1) * _columnGap;
+    final stages = [
+      for (final stage in _knockoutStages)
+        if (matches.any((match) => match.stage == stage)) stage,
+    ];
 
-    return SizedBox(
+    return Row(
       key: const ValueKey('knockout-tree'),
-      width: width,
-      height: _canvasHeight,
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(
-              key: const ValueKey('bracket-connector-tree'),
-              painter: BracketTreePainter(
-                slots: slots,
-                columnWidth: _columnWidth,
-                cardHeight: _cardHeight,
-              ),
-            ),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (index, stage) in stages.indexed) ...[
+          BracketRoundColumn(
+            stage: stage,
+            matches: matches
+                .where((match) => match.stage == stage)
+                .toList(growable: false),
           ),
-          for (final (index, stage) in stages.indexed)
-            Positioned(
-              key: ValueKey('bracket-round-$stage'),
-              left: _xForColumn(index),
-              top: 0,
-              width: _columnWidth,
-              child: BracketRoundHeader(stage: stage),
-            ),
-          for (final slot in slots)
-            Positioned(
-              key: ValueKey('bracket-slot-${slot.match.id}'),
-              left: slot.left,
-              top: slot.top,
-              width: _columnWidth,
-              height: _cardHeight,
-              child: BracketMatchCard(match: slot.match),
+          if (index != stages.length - 1)
+            SizedBox(
+              key: ValueKey('bracket-connector-tree-$index'),
+              width: 26,
+              height: 132,
+              child: const CustomPaint(painter: BracketConnectorPainter()),
             ),
         ],
-      ),
+      ],
     );
-  }
-
-  List<BracketSlot> _buildSlots() {
-    return [
-      _slot('Round of 32', 0, 0, 'round-32-1'),
-      _slot('Round of 32', 0, 1, 'round-32-2'),
-      _slot('Round of 16', 1, 0.5, 'round-16-1'),
-      _slot('Quarter-finals', 2, 1, 'quarter-final-1'),
-      _slot('Semi-finals', 3, 1.5, 'semi-final-1'),
-      _slot('Final', 5, 2, 'final'),
-      _slot('3rd Place', 4, 3.25, 'third-place'),
-    ];
-  }
-
-  BracketSlot _slot(String stage, int column, double row, String matchId) {
-    return BracketSlot(
-      match: matches.firstWhere((match) => match.id == matchId),
-      stage: stage,
-      left: _xForColumn(column),
-      top: _headerHeight + _headerGap + row * 112,
-    );
-  }
-
-  static double _xForColumn(int column) {
-    return column * (_columnWidth + _columnGap);
   }
 }
+
+const _knockoutStages = [
+  'Round of 32',
+  'Round of 16',
+  'Quarter-finals',
+  'Semi-finals',
+  '3rd Place',
+  'Final',
+  'Knockout',
+];
 
 class BracketRoundColumn extends StatelessWidget {
   const BracketRoundColumn({
@@ -1395,7 +1117,7 @@ class BracketRoundColumn extends StatelessWidget {
   });
 
   final String stage;
-  final List<SampleMatch> matches;
+  final List<DisplayMatch> matches;
 
   @override
   Widget build(BuildContext context) {
@@ -1461,7 +1183,7 @@ class BracketRoundHeader extends StatelessWidget {
 class BracketMatchCard extends StatelessWidget {
   const BracketMatchCard({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
@@ -1518,26 +1240,13 @@ class BracketMatchCard extends StatelessWidget {
               BracketTeamLine(
                 team: match.home,
                 score: match.homeScore,
-                isWinner:
-                    match.isCompleted &&
-                    (match.homeScore ?? 0) > (match.awayScore ?? 0),
+                isWinner: match.isHomeWinner,
               ),
               const SizedBox(height: 6),
               BracketTeamLine(
                 team: match.away,
                 score: match.awayScore,
-                isWinner:
-                    match.isCompleted &&
-                    (match.awayScore ?? 0) > (match.homeScore ?? 0),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                match.venue,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.mutedForeground,
-                  fontSize: 11,
-                ),
+                isWinner: match.isAwayWinner,
               ),
             ],
           ),
@@ -1555,7 +1264,7 @@ class BracketTeamLine extends StatelessWidget {
     required this.isWinner,
   });
 
-  final SampleTeam team;
+  final DisplayTeam team;
   final int? score;
   final bool isWinner;
 
@@ -1591,20 +1300,9 @@ class BracketTeamLine extends StatelessWidget {
   }
 }
 
-class BracketConnectorGutter extends StatelessWidget {
-  const BracketConnectorGutter({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 24,
-      height: 116,
-      child: CustomPaint(painter: BracketConnectorPainter()),
-    );
-  }
-}
-
 class BracketConnectorPainter extends CustomPainter {
+  const BracketConnectorPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -1624,114 +1322,10 @@ class BracketConnectorPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class BracketTreePainter extends CustomPainter {
-  BracketTreePainter({
-    required this.slots,
-    required this.columnWidth,
-    required this.cardHeight,
-  });
-
-  final List<BracketSlot> slots;
-  final double columnWidth;
-  final double cardHeight;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = AppColors.primary.withValues(alpha: 0.55)
-      ..strokeWidth = 2
-      ..style = PaintingStyle.stroke;
-
-    _connect(canvas, paint, 'round-32-1', 'round-16-1');
-    _connect(canvas, paint, 'round-32-2', 'round-16-1');
-    _connect(canvas, paint, 'round-16-1', 'quarter-final-1');
-    _connect(canvas, paint, 'quarter-final-1', 'semi-final-1');
-    _connect(canvas, paint, 'semi-final-1', 'final');
-    _connect(canvas, paint, 'semi-final-1', 'third-place');
-  }
-
-  void _connect(Canvas canvas, Paint paint, String fromId, String toId) {
-    final from = slots.firstWhere((slot) => slot.match.id == fromId);
-    final to = slots.firstWhere((slot) => slot.match.id == toId);
-    final start = Offset(from.left + columnWidth, from.top + cardHeight / 2);
-    final end = Offset(to.left, to.top + cardHeight / 2);
-    final midX = start.dx + (end.dx - start.dx) / 2;
-
-    final path = Path()
-      ..moveTo(start.dx, start.dy)
-      ..lineTo(midX, start.dy)
-      ..lineTo(midX, end.dy)
-      ..lineTo(end.dx, end.dy);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant BracketTreePainter oldDelegate) {
-    return oldDelegate.slots != slots ||
-        oldDelegate.columnWidth != columnWidth ||
-        oldDelegate.cardHeight != cardHeight;
-  }
-}
-
-class StageSection extends StatelessWidget {
-  const StageSection({
-    super.key,
-    required this.title,
-    required this.matches,
-    this.isFinal = false,
-  });
-
-  final String title;
-  final List<SampleMatch> matches;
-  final bool isFinal;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      key: ValueKey('stage-section-$title'),
-      padding: const EdgeInsets.only(bottom: 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isFinal ? AppColors.primary : AppColors.muted,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isFinal ? Colors.white : AppColors.mutedForeground,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(child: Divider(color: AppColors.border)),
-            ],
-          ),
-          const SizedBox(height: 12),
-          for (final match in matches) ...[
-            MatchCard(match: match),
-            const SizedBox(height: 8),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
 class MatchDetailPage extends StatelessWidget {
   const MatchDetailPage({super.key, required this.match});
 
-  final SampleMatch match;
+  final DisplayMatch match;
 
   @override
   Widget build(BuildContext context) {
@@ -1785,8 +1379,6 @@ class MatchDetailPage extends StatelessWidget {
               label: '${match.dayOfWeek}, ${match.date}',
             ),
             DetailRow(icon: Icons.schedule, label: match.time),
-            DetailRow(icon: Icons.stadium, label: match.venue),
-            DetailRow(icon: Icons.location_on_outlined, label: match.city),
             DetailRow(icon: Icons.emoji_events_outlined, label: match.stage),
           ],
         ),
@@ -1820,6 +1412,41 @@ class DetailRow extends StatelessWidget {
               label,
               style: const TextStyle(
                 color: AppColors.foreground,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class EmptyState extends StatelessWidget {
+  const EmptyState({super.key, required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.primary, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: AppColors.mutedForeground,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
               ),
             ),

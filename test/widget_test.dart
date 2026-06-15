@@ -1,7 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:world_cup_app/main.dart';
+import 'package:world_cup_app/src/data/tournament_models.dart';
 
 void main() {
   test('uses a playful light green and red color system', () {
@@ -10,6 +12,163 @@ void main() {
     expect(AppColors.accent, const Color(0xffef233c));
     expect(AppColors.navBackground, Colors.white);
     expect(AppColors.navSelected, const Color(0xffffe3e8));
+  });
+
+  testWidgets('shows loading state before tournament data resolves', (
+    WidgetTester tester,
+  ) async {
+    final completer = Completer<Tournament>();
+
+    await tester.pumpWidget(MyApp(tournamentLoader: () => completer.future));
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(find.text('World Cup 2026'), findsNothing);
+
+    completer.complete(_baselineTournament());
+    await tester.pumpAndSettle();
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('World Cup 2026'), findsOneWidget);
+  });
+
+  testWidgets('renders real match data and opens match detail', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => _completedTournament()),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mexico'), findsOneWidget);
+    expect(find.text('South Africa'), findsOneWidget);
+    expect(find.text('2 - 1'), findsOneWidget);
+    expect(find.textContaining('Mexico City Stadium'), findsNothing);
+    expect(find.byKey(const ValueKey('match-card-match-001')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('match-card-match-001')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Match detail'), findsOneWidget);
+    expect(find.text('Final score'), findsOneWidget);
+    expect(find.text('Mexico 2 - 1 South Africa'), findsOneWidget);
+    expect(find.text('Group A'), findsOneWidget);
+    expect(find.textContaining('Mexico City Stadium'), findsNothing);
+    expect(find.text('Mexico City'), findsNothing);
+  });
+
+  testWidgets('groups tab renders zeroed standings when standings are absent', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => _baselineTournament()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Groups'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Group A'), findsOneWidget);
+    expect(find.text('Pts'), findsWidgets);
+    expect(find.byKey(const ValueKey('standing-row-1-Mexico')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('standing-row-2-South Africa')),
+      findsOneWidget,
+    );
+    expect(find.text('0'), findsWidgets);
+  });
+
+  testWidgets(
+    'knockout tab renders empty state when no knockout matches exist',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MyApp(tournamentLoader: () async => _baselineTournament()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Knockout'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No knockout matches available'), findsOneWidget);
+      expect(find.byKey(const ValueKey('knockout-bracket')), findsNothing);
+    },
+  );
+
+  testWidgets('shows an error state when baseline data cannot load', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => throw const FormatException('bad')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Unable to load tournament data'), findsOneWidget);
+    expect(
+      find.text('Check the bundled World Cup data and try again.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'knockout tab renders a bracket when real knockout matches exist',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MyApp(tournamentLoader: () async => _knockoutTournament()),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Knockout'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('bracket-match-round-32-1')),
+        findsOneWidget,
+      );
+      expect(find.text('Winner Group A'), findsOneWidget);
+      expect(find.text('Runner-up Group B'), findsOneWidget);
+    },
+  );
+
+  testWidgets('knockout bracket uses unique keys across multiple rounds', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => _multiRoundKnockoutTournament()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Knockout'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('bracket-round-Round of 32')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('bracket-round-Round of 16')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('knockout bracket grows vertically for dense rounds', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => _denseKnockoutTournament()),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Knockout'));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('bracket-match-round-32-16')),
+      findsOneWidget,
+    );
   });
 
   testWidgets('knockout round header matches inactive match filters', (
@@ -36,194 +195,139 @@ void main() {
     expect(label.style?.color, AppColors.mutedForeground);
     expect(label.style?.fontWeight, FontWeight.w700);
   });
+}
 
-  testWidgets('renders tournament shell and switches tabs', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    expect(find.text('World Cup 2026'), findsOneWidget);
-    expect(find.text('Matches'), findsOneWidget);
-    expect(find.text('Groups'), findsOneWidget);
-    expect(find.text('Knockout'), findsOneWidget);
-    expect(find.text('Mexico'), findsOneWidget);
-
-    await tester.tap(find.text('Groups'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Group A'), findsOneWidget);
-    expect(find.text('Pts'), findsWidgets);
-
-    await tester.tap(find.text('Knockout'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Round of 32'), findsWidgets);
-    expect(find.text('TBD'), findsWidgets);
-  });
-
-  testWidgets('group standings rows stay white', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
-
-    await tester.tap(find.text('Groups'));
-    await tester.pumpAndSettle();
-
-    final topRow = find.byKey(const ValueKey('standing-row-1-Mexico'));
-    final lowerRow = find.byKey(const ValueKey('standing-row-3-Ecuador'));
-
-    expect(topRow, findsOneWidget);
-    expect(lowerRow, findsOneWidget);
-
-    final topContainer = tester.widget<Container>(topRow);
-    final lowerContainer = tester.widget<Container>(lowerRow);
-
-    expect((topContainer.decoration! as BoxDecoration).color, AppColors.card);
-    expect((lowerContainer.decoration! as BoxDecoration).color, AppColors.card);
-  });
-
-  testWidgets('shows scheduled matches and completed results clearly', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    expect(find.text('17:00'), findsOneWidget);
-    expect(find.text('KO'), findsWidgets);
-    expect(find.text('FT'), findsWidgets);
-    expect(
-      find.byKey(const ValueKey('match-card-spain-germany')),
-      findsOneWidget,
-    );
-    expect(find.text('2 - 1'), findsOneWidget);
-  });
-
-  testWidgets('match cards show teams around a centered score without codes', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    final matchCard = find.byKey(const ValueKey('match-card-spain-germany'));
-    await tester.ensureVisible(matchCard);
-
-    expect(
-      find.descendant(
-        of: matchCard,
-        matching: find.byKey(const ValueKey('matchup-row-spain-germany')),
+Tournament _baselineTournament() {
+  return Tournament(
+    schemaVersion: 1,
+    info: TournamentInfo(
+      id: 'world-cup-2026',
+      name: 'FIFA World Cup 2026',
+      startDate: DateTime(2026, 6, 11),
+      endDate: DateTime(2026, 7, 19),
+    ),
+    teams: const [
+      Team(
+        id: 'mexico',
+        name: 'Mexico',
+        shortName: 'MEX',
+        countryCode: 'MEX',
+        groupId: 'group-a',
       ),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: matchCard, matching: find.text('Spain')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: matchCard, matching: find.text('2 - 1')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: matchCard, matching: find.text('Germany')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: matchCard, matching: find.text('ESP')),
-      findsNothing,
-    );
-    expect(
-      find.descendant(of: matchCard, matching: find.text('GER')),
-      findsNothing,
-    );
-  });
+      Team(
+        id: 'south-africa',
+        name: 'South Africa',
+        shortName: 'RSA',
+        countryCode: 'RSA',
+        groupId: 'group-a',
+      ),
+    ],
+    groups: [
+      TournamentGroup(
+        id: 'group-a',
+        name: 'Group A',
+        teamIds: const ['mexico', 'south-africa'],
+      ),
+    ],
+    venues: const [
+      Venue(
+        id: 'mexico-city-stadium',
+        name: 'Mexico City Stadium',
+        city: 'Mexico City',
+        country: 'Mexico',
+      ),
+    ],
+    matches: [
+      Match(
+        id: 'match-001',
+        stage: TournamentStage.group,
+        groupId: 'group-a',
+        kickoffUtc: DateTime.utc(2026, 6, 11, 19),
+        venueId: 'mexico-city-stadium',
+        homeTeamId: 'mexico',
+        awayTeamId: 'south-africa',
+      ),
+    ],
+  );
+}
 
-  testWidgets('match filter chips switch between group stage and rounds', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
+Tournament _completedTournament() {
+  return _baselineTournament().copyWith(
+    matches: [
+      Match(
+        id: 'match-001',
+        stage: TournamentStage.group,
+        groupId: 'group-a',
+        kickoffUtc: DateTime.utc(2026, 6, 11, 19),
+        venueId: 'mexico-city-stadium',
+        homeTeamId: 'mexico',
+        awayTeamId: 'south-africa',
+        status: MatchStatus.completed,
+        score: const MatchScore(home: 2, away: 1),
+        winnerTeamId: 'mexico',
+      ),
+    ],
+  );
+}
 
-    expect(find.text('Group Stage'), findsOneWidget);
-    expect(find.text('Round of 32'), findsOneWidget);
-    expect(find.text('Quarter-finals'), findsOneWidget);
-    expect(find.text('Semi-finals'), findsOneWidget);
-    expect(find.text('3rd Place'), findsWidgets);
-    expect(find.widgetWithText(ChoiceChip, 'Final'), findsOneWidget);
+Tournament _knockoutTournament() {
+  return _baselineTournament().copyWith(
+    matches: [
+      Match(
+        id: 'round-32-1',
+        stage: TournamentStage.knockout,
+        kickoffUtc: DateTime.utc(2026, 7, 4, 20),
+        venueId: 'mexico-city-stadium',
+        homePlaceholder: 'Winner Group A',
+        awayPlaceholder: 'Runner-up Group B',
+      ),
+    ],
+  );
+}
 
-    final finalChip = find.widgetWithText(ChoiceChip, 'Final');
-    await tester.ensureVisible(finalChip);
-    await tester.tap(finalChip);
-    await tester.pumpAndSettle();
+Tournament _multiRoundKnockoutTournament() {
+  return _baselineTournament().copyWith(
+    matches: [
+      Match(
+        id: 'round-32-1',
+        stage: TournamentStage.knockout,
+        kickoffUtc: DateTime.utc(2026, 7, 4, 20),
+        venueId: 'mexico-city-stadium',
+        homePlaceholder: 'Winner Group A',
+        awayPlaceholder: 'Runner-up Group B',
+      ),
+      Match(
+        id: 'round-16-1',
+        stage: TournamentStage.knockout,
+        kickoffUtc: DateTime.utc(2026, 7, 8, 20),
+        venueId: 'mexico-city-stadium',
+        homePlaceholder: 'TBD',
+        awayPlaceholder: 'TBD',
+      ),
+      Match(
+        id: 'quarter-final-1',
+        stage: TournamentStage.knockout,
+        kickoffUtc: DateTime.utc(2026, 7, 12, 20),
+        venueId: 'mexico-city-stadium',
+        homePlaceholder: 'TBD',
+        awayPlaceholder: 'TBD',
+      ),
+    ],
+  );
+}
 
-    expect(find.text('Mexico'), findsNothing);
-    expect(find.byKey(const ValueKey('match-card-final')), findsOneWidget);
-    expect(find.textContaining('MetLife Stadium'), findsOneWidget);
-
-    final groupStageChip = find.widgetWithText(ChoiceChip, 'Group Stage');
-    await tester.ensureVisible(groupStageChip);
-    await tester.tap(groupStageChip);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Mexico'), findsOneWidget);
-    expect(find.text('Winner Group A'), findsNothing);
-  });
-
-  testWidgets('knockout tab renders a horizontal bracket without filters', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    await tester.tap(find.text('Knockout'));
-    await tester.pumpAndSettle();
-
-    expect(find.byKey(const ValueKey('knockout-bracket')), findsOneWidget);
-    expect(find.byKey(const ValueKey('knockout-tree')), findsOneWidget);
-    expect(
-      find.byKey(const ValueKey('bracket-connector-tree')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-slot-round-32-1')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-slot-round-16-1')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-round-Round of 32')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-round-Round of 16')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-round-Quarter-finals')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-round-Semi-finals')),
-      findsOneWidget,
-    );
-    expect(
-      find.byKey(const ValueKey('bracket-round-3rd Place')),
-      findsOneWidget,
-    );
-    expect(find.byKey(const ValueKey('bracket-round-Final')), findsOneWidget);
-    expect(find.widgetWithText(ChoiceChip, 'Semi-finals'), findsNothing);
-    expect(find.text('TBD'), findsWidgets);
-    expect(find.byKey(const ValueKey('bracket-match-final')), findsOneWidget);
-  });
-
-  testWidgets('opens match detail with final score and venue metadata', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const MyApp());
-
-    final spainGermany = find.byKey(const ValueKey('match-card-spain-germany'));
-    await tester.ensureVisible(spainGermany);
-    await tester.tap(spainGermany);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Match detail'), findsOneWidget);
-    expect(find.text('Final score'), findsOneWidget);
-    expect(find.text('Spain 2 - 1 Germany'), findsOneWidget);
-    expect(find.text('Mercedes-Benz Stadium'), findsOneWidget);
-    expect(find.text('Group E'), findsOneWidget);
-  });
+Tournament _denseKnockoutTournament() {
+  return _baselineTournament().copyWith(
+    matches: [
+      for (var index = 1; index <= 16; index += 1)
+        Match(
+          id: 'round-32-$index',
+          stage: TournamentStage.knockout,
+          kickoffUtc: DateTime.utc(2026, 7, index),
+          venueId: 'mexico-city-stadium',
+          homePlaceholder: 'TBD',
+          awayPlaceholder: 'TBD',
+        ),
+    ],
+  );
 }
