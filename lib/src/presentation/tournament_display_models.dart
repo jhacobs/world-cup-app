@@ -32,6 +32,7 @@ class DisplayMatch {
     required this.stage,
     required this.isKnockout,
     this.group,
+    required this.localDate,
     required this.date,
     required this.dayOfWeek,
     required this.time,
@@ -47,6 +48,7 @@ class DisplayMatch {
   final String stage;
   final bool isKnockout;
   final String? group;
+  final DateTime localDate;
   final String date;
   final String dayOfWeek;
   final String time;

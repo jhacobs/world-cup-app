@@ -46,6 +46,7 @@ DisplayMatch _mapMatch(
     stage: _stageLabel(match),
     isKnockout: match.stage == TournamentStage.knockout,
     group: _groupShortName(group?.name),
+    localDate: _dateOnly(localKickoff),
     date: _monthDay(localKickoff),
     dayOfWeek: _weekday(localKickoff.weekday),
     time: _time(localKickoff),
@@ -64,6 +65,10 @@ DisplayMatch _mapMatch(
     awayScore: match.score?.away,
     winnerTeamId: match.winnerTeamId,
   );
+}
+
+DateTime _dateOnly(DateTime dateTime) {
+  return DateTime(dateTime.year, dateTime.month, dateTime.day);
 }
 
 DisplayGroup _mapGroup(

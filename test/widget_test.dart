@@ -94,6 +94,57 @@ void main() {
     expect(find.text('0'), findsWidgets);
   });
 
+  testWidgets('matches tab scrolls to current match date', (
+    WidgetTester tester,
+  ) async {
+    await _withSmallViewport(tester, () async {
+      await tester.pumpWidget(
+        MyApp(
+          tournamentLoader: () async => _manyMatchDaysTournament(),
+          currentDateProvider: () => DateTime(2026, 6, 16),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_headerTop(tester, 'Jun 16'), lessThan(180));
+      expect(_headerTop(tester, 'Jun 11'), lessThan(0));
+    });
+  });
+
+  testWidgets('matches tab scrolls to next future match date', (
+    WidgetTester tester,
+  ) async {
+    await _withSmallViewport(tester, () async {
+      await tester.pumpWidget(
+        MyApp(
+          tournamentLoader: () async => _manyMatchDaysTournament(),
+          currentDateProvider: () => DateTime(2026, 6, 15),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_headerTop(tester, 'Jun 16'), lessThan(180));
+      expect(_headerTop(tester, 'Jun 11'), lessThan(0));
+    });
+  });
+
+  testWidgets('matches tab stays at start when all match dates are past', (
+    WidgetTester tester,
+  ) async {
+    await _withSmallViewport(tester, () async {
+      await tester.pumpWidget(
+        MyApp(
+          tournamentLoader: () async => _manyMatchDaysTournament(),
+          currentDateProvider: () => DateTime(2026, 7, 1),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(_headerTop(tester, 'Jun 11'), greaterThan(0));
+      expect(_headerTop(tester, 'Jun 16'), greaterThan(520));
+    });
+  });
+
   testWidgets(
     'knockout tab renders empty state when no knockout matches exist',
     (WidgetTester tester) async {
@@ -328,6 +379,7 @@ DisplayMatch _displayMatch({required bool isCompleted}) {
     stage: 'Groepsfase',
     isKnockout: false,
     group: 'A',
+    localDate: DateTime(2026, 6, 11),
     date: '11 juni',
     dayOfWeek: 'Donderdag',
     time: '21:00',
@@ -337,6 +389,22 @@ DisplayMatch _displayMatch({required bool isCompleted}) {
     homeScore: isCompleted ? 2 : null,
     awayScore: isCompleted ? 1 : null,
   );
+}
+
+Future<void> _withSmallViewport(
+  WidgetTester tester,
+  Future<void> Function() body,
+) async {
+  tester.view.physicalSize = const Size(390, 520);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+
+  await body();
+}
+
+double _headerTop(WidgetTester tester, String date) {
+  return tester.getTopLeft(find.text(date).first).dy;
 }
 
 Tournament _baselineTournament() {
@@ -389,6 +457,23 @@ Tournament _baselineTournament() {
         homeTeamId: 'mexico',
         awayTeamId: 'south-africa',
       ),
+    ],
+  );
+}
+
+Tournament _manyMatchDaysTournament() {
+  return _baselineTournament().copyWith(
+    matches: [
+      for (final day in [11, 12, 13, 14, 16, 17, 18])
+        Match(
+          id: 'match-jun-$day',
+          stage: TournamentStage.group,
+          groupId: 'group-a',
+          kickoffUtc: DateTime.utc(2026, 6, day, 12),
+          venueId: 'mexico-city-stadium',
+          homeTeamId: 'mexico',
+          awayTeamId: 'south-africa',
+        ),
     ],
   );
 }

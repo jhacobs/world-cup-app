@@ -9,15 +9,17 @@ import 'src/presentation/tournament_display_mapper.dart';
 import 'src/presentation/tournament_display_models.dart';
 
 typedef TournamentLoader = Future<Tournament> Function();
+typedef CurrentDateProvider = DateTime Function();
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, this.tournamentLoader});
+  const MyApp({super.key, this.tournamentLoader, this.currentDateProvider});
 
   final TournamentLoader? tournamentLoader;
+  final CurrentDateProvider? currentDateProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +69,7 @@ class MyApp extends StatelessWidget {
       ),
       home: TournamentLoaderPage(
         tournamentLoader: tournamentLoader ?? _defaultTournamentLoader,
+        currentDateProvider: currentDateProvider ?? DateTime.now,
       ),
     );
   }
@@ -127,9 +130,14 @@ class AppColors {
 enum TournamentTab { matches, groups, knockout }
 
 class TournamentLoaderPage extends StatefulWidget {
-  const TournamentLoaderPage({super.key, required this.tournamentLoader});
+  const TournamentLoaderPage({
+    super.key,
+    required this.tournamentLoader,
+    required this.currentDateProvider,
+  });
 
   final TournamentLoader tournamentLoader;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<TournamentLoaderPage> createState() => _TournamentLoaderPageState();
@@ -155,7 +163,10 @@ class _TournamentLoaderPageState extends State<TournamentLoaderPage> {
         if (snapshot.hasError || !snapshot.hasData) {
           return const TournamentErrorPage();
         }
-        return TournamentHomePage(tournament: snapshot.requireData);
+        return TournamentHomePage(
+          tournament: snapshot.requireData,
+          currentDateProvider: widget.currentDateProvider,
+        );
       },
     );
   }
@@ -216,9 +227,14 @@ class TournamentErrorPage extends StatelessWidget {
 }
 
 class TournamentHomePage extends StatefulWidget {
-  const TournamentHomePage({super.key, required this.tournament});
+  const TournamentHomePage({
+    super.key,
+    required this.tournament,
+    required this.currentDateProvider,
+  });
 
   final DisplayTournament tournament;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<TournamentHomePage> createState() => _TournamentHomePageState();
@@ -267,7 +283,10 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
 
   Widget _buildCurrentTab() {
     return switch (_selectedTab) {
-      TournamentTab.matches => MatchesTab(tournament: widget.tournament),
+      TournamentTab.matches => MatchesTab(
+        tournament: widget.tournament,
+        currentDateProvider: widget.currentDateProvider,
+      ),
       TournamentTab.groups => GroupsTab(groups: widget.tournament.groups),
       TournamentTab.knockout => KnockoutTab(
         matches: widget.tournament.knockoutMatches,
@@ -340,9 +359,14 @@ class TournamentHeader extends StatelessWidget {
 }
 
 class MatchesTab extends StatefulWidget {
-  const MatchesTab({super.key, required this.tournament});
+  const MatchesTab({
+    super.key,
+    required this.tournament,
+    required this.currentDateProvider,
+  });
 
   final DisplayTournament tournament;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<MatchesTab> createState() => _MatchesTabState();
@@ -350,6 +374,15 @@ class MatchesTab extends StatefulWidget {
 
 class _MatchesTabState extends State<MatchesTab> {
   var _selectedFilter = 'Alles';
+  final _scrollController = ScrollController();
+  final _dateGroupKeys = <DateTime, GlobalKey>{};
+  DateTime? _lastAutoScrollTarget;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -361,8 +394,12 @@ class _MatchesTabState extends State<MatchesTab> {
       widget.tournament.matches,
       _selectedFilter,
     );
+    final matchGroups = _groupByDate(filteredMatches);
+
+    _scheduleAutoScroll(matchGroups);
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -370,7 +407,12 @@ class _MatchesTabState extends State<MatchesTab> {
           FilterChips(
             labels: filters,
             selectedLabel: _selectedFilter,
-            onSelected: (label) => setState(() => _selectedFilter = label),
+            onSelected: (label) {
+              setState(() {
+                _selectedFilter = label;
+                _lastAutoScrollTarget = null;
+              });
+            },
           ),
           const SizedBox(height: 12),
           if (filteredMatches.isEmpty)
@@ -379,8 +421,14 @@ class _MatchesTabState extends State<MatchesTab> {
               message: 'Geen wedstrijden beschikbaar',
             )
           else
-            for (final group in _groupByDate(filteredMatches))
-              DateMatchGroup(matches: group),
+            for (final group in matchGroups)
+              DateMatchGroup(
+                key: _dateGroupKeys.putIfAbsent(
+                  group.first.localDate,
+                  GlobalKey.new,
+                ),
+                matches: group,
+              ),
         ],
       ),
     );
@@ -391,6 +439,50 @@ class _MatchesTabState extends State<MatchesTab> {
       return matches;
     }
     return matches.where((match) => match.stage == filter).toList();
+  }
+
+  void _scheduleAutoScroll(List<List<DisplayMatch>> matchGroups) {
+    final visibleDates = {
+      for (final group in matchGroups)
+        if (group.isNotEmpty) group.first.localDate,
+    };
+    _dateGroupKeys.removeWhere((date, _) => !visibleDates.contains(date));
+
+    final targetDate = _autoScrollTargetDate(matchGroups);
+    if (targetDate == null || targetDate == _lastAutoScrollTarget) {
+      return;
+    }
+    _lastAutoScrollTarget = targetDate;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final targetContext = _dateGroupKeys[targetDate]?.currentContext;
+      if (targetContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.02,
+      );
+    });
+  }
+
+  DateTime? _autoScrollTargetDate(List<List<DisplayMatch>> matchGroups) {
+    final today = _dateOnly(widget.currentDateProvider());
+    for (final group in matchGroups) {
+      if (group.isEmpty) {
+        continue;
+      }
+      final groupDate = group.first.localDate;
+      if (!groupDate.isBefore(today)) {
+        return groupDate;
+      }
+    }
+    return null;
   }
 }
 
@@ -443,10 +535,14 @@ class FilterChips extends StatelessWidget {
 List<List<DisplayMatch>> _groupByDate(List<DisplayMatch> matches) {
   final groups = <String, List<DisplayMatch>>{};
   for (final match in matches) {
-    final key = '${match.dayOfWeek}|${match.date}';
+    final key = match.localDate.toIso8601String();
     groups.putIfAbsent(key, () => []).add(match);
   }
   return groups.values.toList();
+}
+
+DateTime _dateOnly(DateTime dateTime) {
+  return DateTime(dateTime.year, dateTime.month, dateTime.day);
 }
 
 class DateMatchGroup extends StatelessWidget {

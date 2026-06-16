@@ -28,6 +28,10 @@ void main() {
       expect(match.group, 'A');
       expect(match.home.name, 'Mexico');
       expect(match.away.name, 'Zuid-Afrika');
+      expect(
+        match.localDate,
+        DateTime(localKickoff.year, localKickoff.month, localKickoff.day),
+      );
       expect(match.date, '${_month(localKickoff.month)} ${localKickoff.day}');
       expect(match.dayOfWeek, _weekday(localKickoff.weekday));
       expect(match.time, _time(localKickoff));
