@@ -4,14 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:world_cup_app/main.dart';
 import 'package:world_cup_app/src/data/tournament_models.dart';
+import 'package:world_cup_app/src/presentation/tournament_display_models.dart';
 
 void main() {
-  test('uses a playful light green and red color system', () {
-    expect(AppColors.background, Colors.white);
-    expect(AppColors.primary, const Color(0xff16a34a));
-    expect(AppColors.accent, const Color(0xffef233c));
-    expect(AppColors.navBackground, Colors.white);
-    expect(AppColors.navSelected, const Color(0xffffe3e8));
+  test(
+    'uses the World Cup green, rose, and configured neutral color system',
+    () {
+      expect(AppColors.background, const Color(0xfffaf9f7));
+      expect(AppColors.primary, const Color(0xff16a34a));
+      expect(AppColors.accent, const Color(0xffc42151));
+      expect(AppColors.navBackground, const Color(0xfffaf9f7));
+    },
+  );
+
+  testWidgets('bottom navigation has no selected indicator fill', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      MyApp(tournamentLoader: () async => _baselineTournament()),
+    );
+    await tester.pumpAndSettle();
+
+    final materialApp = tester.widget<MaterialApp>(find.byType(MaterialApp));
+    final navTheme = materialApp.theme!.navigationBarTheme;
+
+    expect(navTheme.indicatorColor, Colors.transparent);
   });
 
   testWidgets('shows loading state before tournament data resolves', (
@@ -198,6 +215,128 @@ void main() {
     expect(label.style?.color, AppColors.mutedForeground);
     expect(label.style?.fontWeight, FontWeight.w700);
   });
+
+  testWidgets('final and third place round headers match other rounds', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              BracketRoundHeader(stage: '3e plaats'),
+              BracketRoundHeader(stage: 'Finale'),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    for (final stage in ['3e plaats', 'Finale']) {
+      final containerFinder = find.descendant(
+        of: find.ancestor(
+          of: find.text(stage),
+          matching: find.byType(BracketRoundHeader),
+        ),
+        matching: find.byType(Container),
+      );
+      final container = tester.widget<Container>(containerFinder);
+      final decoration = container.decoration! as BoxDecoration;
+      final border = decoration.border! as Border;
+      final label = tester.widget<Text>(find.text(stage));
+
+      expect(decoration.color, AppColors.card);
+      expect(decoration.borderRadius, BorderRadius.circular(18));
+      expect(border.top.color, AppColors.border);
+      expect(label.style?.color, AppColors.mutedForeground);
+      expect(label.style?.fontWeight, FontWeight.w700);
+    }
+  });
+
+  testWidgets(
+    'completed match status is neutral while score chips look outlined',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Row(
+              children: [
+                MatchStatusColumn(match: _displayMatch(isCompleted: false)),
+                MatchStatusColumn(match: _displayMatch(isCompleted: true)),
+                MatchCenterScore(match: _displayMatch(isCompleted: false)),
+                MatchCenterScore(match: _displayMatch(isCompleted: true)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final statusDecorations = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byType(MatchStatusColumn),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((container) => container.decoration! as BoxDecoration)
+          .toList();
+      final upcomingStatusBorder = statusDecorations[0].border! as Border;
+      final completedStatusBorder = statusDecorations[1].border! as Border;
+
+      expect(statusDecorations[0].color, AppColors.muted);
+      expect(statusDecorations[1].color, AppColors.neutral200);
+      expect(upcomingStatusBorder.right.color, AppColors.primary);
+      expect(completedStatusBorder.right.color, AppColors.neutral300);
+
+      final scoreDecorations = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byType(MatchCenterScore),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((container) => container.decoration! as BoxDecoration)
+          .toList();
+      final upcomingScoreBorder = scoreDecorations[0].border! as Border;
+      final completedScoreBorder = scoreDecorations[1].border! as Border;
+
+      expect(scoreDecorations[0].color, AppColors.card);
+      expect(scoreDecorations[1].color, AppColors.card);
+      expect(upcomingScoreBorder.top.color, AppColors.primary);
+      expect(completedScoreBorder.top.color, AppColors.primary);
+
+      final scoreTexts = tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byType(MatchCenterScore),
+              matching: find.byType(Text),
+            ),
+          )
+          .toList();
+
+      expect(scoreTexts[0].style?.color, AppColors.primary);
+      expect(scoreTexts[1].style?.color, AppColors.primary);
+    },
+  );
+}
+
+DisplayMatch _displayMatch({required bool isCompleted}) {
+  const home = DisplayTeam(id: 'mexico', name: 'Mexico', code: 'MEX');
+  const away = DisplayTeam(id: 'canada', name: 'Canada', code: 'CAN');
+  return DisplayMatch(
+    id: isCompleted ? 'completed' : 'upcoming',
+    stage: 'Groepsfase',
+    isKnockout: false,
+    group: 'A',
+    date: '11 juni',
+    dayOfWeek: 'Donderdag',
+    time: '21:00',
+    home: home,
+    away: away,
+    isCompleted: isCompleted,
+    homeScore: isCompleted ? 2 : null,
+    awayScore: isCompleted ? 1 : null,
+  );
 }
 
 Tournament _baselineTournament() {

@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.navBackground,
-          indicatorColor: AppColors.navSelected,
+          indicatorColor: Colors.transparent,
           iconTheme: WidgetStateProperty.resolveWith((states) {
             return IconThemeData(
               color: states.contains(WidgetState.selected)
@@ -81,18 +81,47 @@ class MyApp extends StatelessWidget {
 }
 
 class AppColors {
-  static const background = Colors.white;
-  static const foreground = Color(0xff12311f);
+  static const primary50 = Color(0xfff0fdf4);
+  static const primary100 = Color(0xffdcfce7);
+  static const primary200 = Color(0xffbbf7d0);
+  static const primary300 = Color(0xff86efac);
+  static const primary400 = Color(0xff4ade80);
+  static const primary500 = Color(0xff22c55e);
+  static const primary600 = Color(0xff16a34a);
+  static const primary700 = Color(0xff15803d);
+  static const primary800 = Color(0xff166534);
+  static const primary900 = Color(0xff14532d);
+  static const primary950 = Color(0xff052e16);
+
+  static const accent300 = Color(0xffe54f87);
+  static const accent400 = Color(0xffd42e64);
+  static const accent500 = Color(0xffc42151);
+  static const accent600 = Color(0xff971d3f);
+  static const accent700 = Color(0xff7f1c38);
+  static const accent800 = Color(0xff4d0a1c);
+
+  static const neutral100 = Color(0xfffaf9f7);
+  static const neutral200 = Color(0xffe8e6e1);
+  static const neutral300 = Color(0xffd3cec4);
+  static const neutral400 = Color(0xffb8b2a7);
+  static const neutral500 = Color(0xffa39e93);
+  static const neutral600 = Color(0xff857f72);
+  static const neutral700 = Color(0xff625d52);
+  static const neutral800 = Color(0xff504a40);
+  static const neutral900 = Color(0xff423d33);
+
+  static const background = neutral100;
+  static const foreground = neutral900;
   static const card = Color(0xffffffff);
-  static const primary = Color(0xff16a34a);
-  static const primaryDark = Color(0xff087f3e);
-  static const muted = Color(0xffdcfce7);
-  static const mutedForeground = Color(0xff4b6b58);
-  static const accent = Color(0xffef233c);
-  static const accentSoft = Color(0xffffe3e8);
-  static const navBackground = Colors.white;
-  static const navSelected = accentSoft;
-  static const border = Color(0x3322c55e);
+  static const primary = primary600;
+  static const primaryDark = primary800;
+  static const muted = primary100;
+  static const mutedForeground = neutral600;
+  static const accent = accent500;
+  static const accentSoft = Color(0xffffe8f0);
+  static const navBackground = background;
+  static const border = neutral200;
+  static const primaryBorder = primary200;
 }
 
 enum TournamentTab { matches, groups, knockout }
@@ -569,10 +598,10 @@ class MatchStatusColumn extends StatelessWidget {
       width: 74,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
-        color: match.isCompleted ? AppColors.accentSoft : AppColors.muted,
+        color: match.isCompleted ? AppColors.neutral200 : AppColors.muted,
         border: Border(
           right: BorderSide(
-            color: match.isCompleted ? AppColors.accent : AppColors.primary,
+            color: match.isCompleted ? AppColors.neutral300 : AppColors.primary,
           ),
         ),
       ),
@@ -584,8 +613,8 @@ class MatchStatusColumn extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: match.isCompleted
-                  ? AppColors.accent
-                  : AppColors.foreground,
+                  ? AppColors.foreground
+                  : AppColors.primaryDark,
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
@@ -593,10 +622,8 @@ class MatchStatusColumn extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             match.isCompleted ? 'Einde' : 'Aftrap',
-            style: TextStyle(
-              color: match.isCompleted
-                  ? AppColors.accent
-                  : AppColors.mutedForeground,
+            style: const TextStyle(
+              color: AppColors.mutedForeground,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -706,17 +733,15 @@ class MatchCenterScore extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 74),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: match.isCompleted ? AppColors.accentSoft : AppColors.muted,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: match.isCompleted ? AppColors.accent : AppColors.border,
-        ),
+        border: Border.all(color: AppColors.primary),
       ),
       child: Text(
         match.resultText,
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: match.isCompleted ? AppColors.accent : AppColors.primaryDark,
+          color: AppColors.primary,
           fontSize: match.isCompleted ? 18 : 15,
           fontWeight: FontWeight.w900,
         ),
@@ -1146,34 +1171,20 @@ class BracketRoundHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFinal = stage == 'Finale';
-    final isPlacement = stage == '3e plaats';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isFinal
-            ? AppColors.accent
-            : isPlacement
-            ? AppColors.accentSoft
-            : AppColors.card,
-        borderRadius: BorderRadius.circular(isFinal || isPlacement ? 8 : 18),
-        border: Border.all(
-          color: isFinal || isPlacement ? AppColors.accent : AppColors.border,
-        ),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         stage,
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isFinal
-              ? Colors.white
-              : isPlacement
-              ? AppColors.accent
-              : AppColors.mutedForeground,
+        style: const TextStyle(
+          color: AppColors.mutedForeground,
           fontSize: 12,
-          fontWeight: isFinal || isPlacement
-              ? FontWeight.w900
-              : FontWeight.w700,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -1204,9 +1215,7 @@ class BracketMatchCard extends StatelessWidget {
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: match.stage == 'Finale'
-                      ? AppColors.accent
-                      : AppColors.primary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1215,10 +1224,8 @@ class BracketMatchCard extends StatelessWidget {
                 children: [
                   Text(
                     match.date,
-                    style: TextStyle(
-                      color: match.stage == 'Finale'
-                          ? AppColors.accent
-                          : AppColors.mutedForeground,
+                    style: const TextStyle(
+                      color: AppColors.mutedForeground,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1228,7 +1235,7 @@ class BracketMatchCard extends StatelessWidget {
                     match.isCompleted ? 'FT' : match.time,
                     style: TextStyle(
                       color: match.isCompleted
-                          ? AppColors.accent
+                          ? AppColors.primary
                           : AppColors.primaryDark,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
