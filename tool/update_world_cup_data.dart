@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'src/football_data_mapper.dart';
+import 'src/retrying_json_fetcher.dart';
 
 const _defaultBaselinePath = 'assets/data/world_cup_2026.json';
 const _defaultOutputPath = '_site/world_cup_2026_updates.json';
@@ -63,68 +64,12 @@ Future<Map<String, Object?>> _loadProviderResponse({
     return _readJsonObject(fixturePath);
   }
 
-  return _fetchJsonObject(uri: uri, token: token, client: client);
-}
-
-Future<Map<String, Object?>> _fetchJsonObject({
-  required Uri uri,
-  required String token,
-  required HttpClient client,
-}) async {
-  final request = await client.getUrl(uri);
-  request.headers.set('X-Auth-Token', token);
-
-  final response = await request.close();
-  final body = await utf8.decodeStream(response);
-  if (response.statusCode < 200 || response.statusCode > 299) {
-    throw HttpException(
-      'football-data.org returned ${response.statusCode}: $body',
-      uri: uri,
-    );
-  }
-
-  return _decodeJsonObject(body, uri.toString());
+  return fetchJsonObjectWithRetries(uri: uri, token: token, client: client);
 }
 
 Future<Map<String, Object?>> _readJsonObject(String path) async {
   final source = await File(path).readAsString();
-  return _decodeJsonObject(source, path);
-}
-
-Map<String, Object?> _decodeJsonObject(String source, String description) {
-  final decoded = jsonDecode(source);
-  final normalized = _normalizeJson(decoded, description);
-  if (normalized is Map<String, Object?>) {
-    return normalized;
-  }
-
-  throw FormatException('Expected $description to contain a JSON object.');
-}
-
-Object? _normalizeJson(Object? value, String description) {
-  if (value == null || value is String || value is num || value is bool) {
-    return value;
-  }
-  if (value is List) {
-    return [for (final item in value) _normalizeJson(item, description)];
-  }
-  if (value is Map) {
-    final object = <String, Object?>{};
-    for (final entry in value.entries) {
-      final key = entry.key;
-      if (key is! String) {
-        throw FormatException(
-          'Expected $description to contain only string object keys.',
-        );
-      }
-      object[key] = _normalizeJson(entry.value, description);
-    }
-    return object;
-  }
-
-  throw FormatException(
-    'Expected $description to contain JSON-compatible values.',
-  );
+  return decodeJsonObject(source, path);
 }
 
 Future<void> _writeJsonObject(String path, Map<String, Object?> object) async {
