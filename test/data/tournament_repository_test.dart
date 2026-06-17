@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:world_cup_app/src/data/tournament_repository.dart';
@@ -117,6 +118,44 @@ void main() {
         client.fetch(Uri.parse('https://updates.example.com/world-cup.json')),
         throwsA(isA<TimeoutException>()),
       );
+    });
+
+    test('retries connection closures while reading update body', () async {
+      final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+      addTearDown(() async {
+        await server.close(force: true);
+      });
+
+      var requests = 0;
+      server.listen((request) async {
+        requests += 1;
+        request.response.headers.contentType = ContentType.json;
+        if (requests == 1) {
+          request.response.headers.contentLength = 999;
+          request.response.write('{"schemaVersion":');
+          try {
+            await request.response.close();
+          } on HttpException {
+            // Expected: this intentionally simulates a truncated response body.
+          }
+          return;
+        }
+
+        request.response.write(_tournamentUpdateJson());
+        await request.response.close();
+      });
+
+      final client = TournamentUpdateClient(
+        timeout: const Duration(seconds: 1),
+        retryDelay: Duration.zero,
+      );
+
+      final body = await client.fetch(
+        Uri.http('${server.address.host}:${server.port}', '/updates.json'),
+      );
+
+      expect(jsonDecode(body), jsonDecode(_tournamentUpdateJson()));
+      expect(requests, 2);
     });
   });
 }
