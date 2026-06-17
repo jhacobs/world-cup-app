@@ -45,8 +45,17 @@ Future<void> _run(List<String> arguments) async {
       client: client,
     );
 
-    final update = mapper.mapMatchesResponse(matches);
-    update['groupStandings'] = mapper.mapStandingsResponse(standings);
+    Map<String, Object?> update;
+    try {
+      update = mapper.mapMatchesResponse(matches);
+      update['groupStandings'] = mapper.mapStandingsResponse(standings);
+    } on ProviderSeasonMismatchException catch (error) {
+      stderr.writeln(
+        'football-data.org does not appear to have 2026 World Cup data yet: '
+        '${error.message}',
+      );
+      update = _emptyUpdate();
+    }
 
     await _writeJsonObject(options.outputPath, update);
   } finally {
@@ -70,6 +79,16 @@ Future<Map<String, Object?>> _loadProviderResponse({
 Future<Map<String, Object?>> _readJsonObject(String path) async {
   final source = await File(path).readAsString();
   return decodeJsonObject(source, path);
+}
+
+Map<String, Object?> _emptyUpdate() {
+  return {
+    'schemaVersion': 1,
+    'source': 'football-data.org',
+    'lastUpdated': DateTime.now().toUtc().toIso8601String(),
+    'matches': <Object?>[],
+    'groupStandings': <Object?>[],
+  };
 }
 
 Future<void> _writeJsonObject(String path, Map<String, Object?> object) async {

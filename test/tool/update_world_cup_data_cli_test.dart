@@ -155,6 +155,60 @@ void main() {
         anyOf(contains(missingFixture.path), contains('Cannot open file')),
       );
     });
+
+    test('season mismatch writes empty update JSON', () async {
+      final tempDir = await Directory.systemTemp.createTemp(
+        'world_cup_updater_cli_',
+      );
+      addTearDown(() async {
+        if (await tempDir.exists()) {
+          await tempDir.delete(recursive: true);
+        }
+      });
+
+      final baseline = _baseline();
+      baseline['matches'] = [
+        {
+          'id': 'match-001',
+          'providerId': 497000,
+          'kickoffUtc': '2026-06-11T19:00:00Z',
+        },
+      ];
+      final baselineFile = await _writeJson(tempDir, 'baseline.json', baseline);
+      final matchesFixture = await _writeJson(
+        tempDir,
+        'matches.json',
+        _matchesResponse(utcDate: '2022-11-20T16:00:00Z'),
+      );
+      final standingsFixture = await _writeJson(
+        tempDir,
+        'standings.json',
+        _standingsResponse(),
+      );
+      final outputFile = File('${tempDir.path}/updates.json');
+
+      final result = await _runCli([
+        '--baseline',
+        baselineFile.path,
+        '--output',
+        outputFile.path,
+        '--matches-fixture',
+        matchesFixture.path,
+        '--standings-fixture',
+        standingsFixture.path,
+      ]);
+
+      expect(result.exitCode, 0, reason: result.stderr as String);
+      expect(result.stderr as String, contains('does not appear to have 2026'));
+
+      final output =
+          jsonDecode(await outputFile.readAsString()) as Map<String, Object?>;
+      expect(output['schemaVersion'], 1);
+      expect(output['source'], 'football-data.org');
+      expect(output['lastUpdated'], isA<String>());
+      expect(output['matches'], isEmpty);
+      expect(output['groupStandings'], isEmpty);
+    });
   });
 }
 
@@ -197,20 +251,23 @@ Map<String, Object?> _baseline() {
   };
 }
 
-Map<String, Object?> _matchesResponse() {
+Map<String, Object?> _matchesResponse({String? utcDate}) {
+  final match = <String, Object?>{
+    'id': 497000,
+    'status': 'FINISHED',
+    'score': {
+      'winner': 'HOME_TEAM',
+      'fullTime': {'home': 2, 'away': 1},
+    },
+    'homeTeam': {'id': 100},
+    'awayTeam': {'id': 200},
+  };
+  if (utcDate != null) {
+    match['utcDate'] = utcDate;
+  }
+
   return {
-    'matches': [
-      {
-        'id': 497000,
-        'status': 'FINISHED',
-        'score': {
-          'winner': 'HOME_TEAM',
-          'fullTime': {'home': 2, 'away': 1},
-        },
-        'homeTeam': {'id': 100},
-        'awayTeam': {'id': 200},
-      },
-    ],
+    'matches': [match],
   };
 }
 

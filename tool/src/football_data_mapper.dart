@@ -1,10 +1,12 @@
 class FootballDataMapper {
   FootballDataMapper._({
     required Map<int, String> matchIdsByProviderId,
+    required Map<int, int> matchYearsByProviderId,
     required Map<int, String> teamIdsByProviderId,
     required Map<String, String> groupIdsByProviderName,
     required Set<String> baselineGroupIds,
   }) : _matchIdsByProviderId = Map.unmodifiable(matchIdsByProviderId),
+       _matchYearsByProviderId = Map.unmodifiable(matchYearsByProviderId),
        _teamIdsByProviderId = Map.unmodifiable(teamIdsByProviderId),
        _groupIdsByProviderName = Map.unmodifiable(groupIdsByProviderName),
        _baselineGroupIds = Set.unmodifiable(baselineGroupIds);
@@ -18,6 +20,7 @@ class FootballDataMapper {
 
     return FootballDataMapper._(
       matchIdsByProviderId: matchIdsByProviderId,
+      matchYearsByProviderId: _providerMatchYears(baseline),
       teamIdsByProviderId: teamIdsByProviderId,
       groupIdsByProviderName: groupIdsByProviderName,
       baselineGroupIds: groupIdsByProviderName.values.toSet(),
@@ -25,6 +28,7 @@ class FootballDataMapper {
   }
 
   final Map<int, String> _matchIdsByProviderId;
+  final Map<int, int> _matchYearsByProviderId;
   final Map<int, String> _teamIdsByProviderId;
   final Map<String, String> _groupIdsByProviderName;
   final Set<String> _baselineGroupIds;
@@ -91,6 +95,7 @@ class FootballDataMapper {
         'No baseline match found for provider match id $providerMatchId.',
       );
     }
+    _validateMatchYear(match, providerMatchId);
 
     final score = _requiredObject(match, 'score');
     final fullTime = _requiredObject(score, 'fullTime');
@@ -128,6 +133,22 @@ class FootballDataMapper {
         awayTeamId: awayTeamId,
       ),
     };
+  }
+
+  void _validateMatchYear(Map<String, Object?> match, int providerMatchId) {
+    final baselineYear = _matchYearsByProviderId[providerMatchId];
+    if (baselineYear == null) {
+      return;
+    }
+
+    final providerUtcDate = _requiredString(match, 'utcDate');
+    final providerYear = DateTime.parse(providerUtcDate).toUtc().year;
+    if (providerYear != baselineYear) {
+      throw ProviderSeasonMismatchException(
+        'Provider match id $providerMatchId is dated $providerYear, but the '
+        'baseline match is dated $baselineYear.',
+      );
+    }
   }
 
   Map<String, Object?> _mapStanding(Map<String, Object?> standing) {
@@ -195,6 +216,25 @@ Map<int, String> _providerIdsByAppId(
       }
       mappings[providerId] = appId;
     }
+  }
+
+  return mappings;
+}
+
+Map<int, int> _providerMatchYears(Map<String, Object?> baseline) {
+  final mappings = <int, int>{};
+  for (final match in _requiredObjectList(baseline, 'matches')) {
+    final providerId = _optionalInt(match, 'providerId');
+    if (providerId == null) {
+      continue;
+    }
+
+    final kickoffUtc = _optionalString(match, 'kickoffUtc');
+    if (kickoffUtc == null) {
+      continue;
+    }
+
+    mappings[providerId] = DateTime.parse(kickoffUtc).toUtc().year;
   }
 
   return mappings;
@@ -287,6 +327,10 @@ String? _mapWinner(
 
 Never _missingWinnerTeamId(String side) {
   throw FormatException('Cannot map $side winner before team is known.');
+}
+
+final class ProviderSeasonMismatchException extends FormatException {
+  const ProviderSeasonMismatchException(super.message);
 }
 
 String _requiredString(Map<String, Object?> json, String key) {

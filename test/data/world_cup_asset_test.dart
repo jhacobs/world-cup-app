@@ -42,6 +42,9 @@ void main() {
       _expectOptionalGroupIdExists(groupIds, match.groupId);
       _expectOptionalTeamIdExists(teamIds, match.homeTeamId);
       _expectOptionalTeamIdExists(teamIds, match.awayTeamId);
+      expect(match.status, MatchStatus.scheduled);
+      expect(match.score, isNull);
+      expect(match.winnerTeamId, isNull);
     }
 
     for (final group in tournament.groups) {
@@ -55,6 +58,14 @@ void main() {
       expect(groupIds, contains(standing.groupId));
       for (final entry in standing.entries) {
         expect(teamIds, contains(entry.teamId));
+        expect(entry.played, 0);
+        expect(entry.won, 0);
+        expect(entry.drawn, 0);
+        expect(entry.lost, 0);
+        expect(entry.goalsFor, 0);
+        expect(entry.goalsAgainst, 0);
+        expect(entry.goalDifference, 0);
+        expect(entry.points, 0);
       }
     }
   });

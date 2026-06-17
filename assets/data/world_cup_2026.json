@@ -534,14 +534,9 @@
       "awayTeamId": "south-africa",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 2,
-        "away": 0,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "mexico"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-002",
@@ -554,14 +549,9 @@
       "awayTeamId": "czechia",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 2,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "south-korea"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-003",
@@ -574,13 +564,8 @@
       "awayTeamId": "bosnia-herzegovina",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 1,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
+      "status": "scheduled",
+      "score": null,
       "winnerTeamId": null
     },
     {
@@ -594,14 +579,9 @@
       "awayTeamId": "paraguay",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 4,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "united-states"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-005",
@@ -614,13 +594,8 @@
       "awayTeamId": "switzerland",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 1,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
+      "status": "scheduled",
+      "score": null,
       "winnerTeamId": null
     },
     {
@@ -634,13 +609,8 @@
       "awayTeamId": "morocco",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 1,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
+      "status": "scheduled",
+      "score": null,
       "winnerTeamId": null
     },
     {
@@ -654,14 +624,9 @@
       "awayTeamId": "scotland",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 0,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "scotland"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-008",
@@ -674,14 +639,9 @@
       "awayTeamId": "turkey",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 2,
-        "away": 0,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "australia"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-009",
@@ -694,14 +654,9 @@
       "awayTeamId": "curacao",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 7,
-        "away": 1,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
-      "winnerTeamId": "germany"
+      "status": "scheduled",
+      "score": null,
+      "winnerTeamId": null
     },
     {
       "id": "match-010",
@@ -714,13 +669,8 @@
       "awayTeamId": "japan",
       "homePlaceholder": null,
       "awayPlaceholder": null,
-      "status": "completed",
-      "score": {
-        "home": 2,
-        "away": 2,
-        "homePenalty": null,
-        "awayPenalty": null
-      },
+      "status": "scheduled",
+      "score": null,
       "winnerTeamId": null
     },
     {
@@ -2172,46 +2122,46 @@
       "entries": [
         {
           "teamId": "mexico",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 2,
+          "goalsFor": 0,
           "goalsAgainst": 0,
-          "goalDifference": 2,
-          "points": 3
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "south-korea",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 2,
-          "goalsAgainst": 1,
-          "goalDifference": 1,
-          "points": 3
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "czechia",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
-          "goalsFor": 1,
-          "goalsAgainst": 2,
-          "goalDifference": -1,
+          "lost": 0,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         },
         {
           "teamId": "south-africa",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
+          "lost": 0,
           "goalsFor": 0,
-          "goalsAgainst": 2,
-          "goalDifference": -2,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         }
       ]
@@ -2221,47 +2171,47 @@
       "entries": [
         {
           "teamId": "switzerland",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "canada",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "qatar",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "bosnia-herzegovina",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         }
       ]
     },
@@ -2270,46 +2220,46 @@
       "entries": [
         {
           "teamId": "scotland",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
+          "goalsFor": 0,
           "goalsAgainst": 0,
-          "goalDifference": 1,
-          "points": 3
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "morocco",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "brazil",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 1,
-          "goalsAgainst": 1,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "haiti",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
+          "lost": 0,
           "goalsFor": 0,
-          "goalsAgainst": 1,
-          "goalDifference": -1,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         }
       ]
@@ -2319,46 +2269,46 @@
       "entries": [
         {
           "teamId": "united-states",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 4,
-          "goalsAgainst": 1,
-          "goalDifference": 3,
-          "points": 3
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "australia",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 2,
+          "goalsFor": 0,
           "goalsAgainst": 0,
-          "goalDifference": 2,
-          "points": 3
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "turkey",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
+          "lost": 0,
           "goalsFor": 0,
-          "goalsAgainst": 2,
-          "goalDifference": -2,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         },
         {
           "teamId": "paraguay",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
-          "goalsFor": 1,
-          "goalsAgainst": 4,
-          "goalDifference": -3,
+          "lost": 0,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         }
       ]
@@ -2368,46 +2318,46 @@
       "entries": [
         {
           "teamId": "germany",
-          "played": 1,
-          "won": 1,
+          "played": 0,
+          "won": 0,
           "drawn": 0,
           "lost": 0,
-          "goalsFor": 7,
-          "goalsAgainst": 1,
-          "goalDifference": 6,
-          "points": 3
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
+          "points": 0
         },
         {
           "teamId": "ecuador",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
           "goalsFor": 0,
           "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "ivory-coast",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
           "goalsFor": 0,
           "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "curacao",
-          "played": 1,
+          "played": 0,
           "won": 0,
           "drawn": 0,
-          "lost": 1,
-          "goalsFor": 1,
-          "goalsAgainst": 7,
-          "goalDifference": -6,
+          "lost": 0,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
+          "goalDifference": 0,
           "points": 0
         }
       ]
@@ -2417,25 +2367,25 @@
       "entries": [
         {
           "teamId": "japan",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 2,
-          "goalsAgainst": 2,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "netherlands",
-          "played": 1,
+          "played": 0,
           "won": 0,
-          "drawn": 1,
+          "drawn": 0,
           "lost": 0,
-          "goalsFor": 2,
-          "goalsAgainst": 2,
+          "goalsFor": 0,
+          "goalsAgainst": 0,
           "goalDifference": 0,
-          "points": 1
+          "points": 0
         },
         {
           "teamId": "sweden",

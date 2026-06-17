@@ -126,6 +126,47 @@ void main() {
       );
     });
 
+    test('throws when provider match date does not match baseline year', () {
+      final baseline = _baseline();
+      baseline['matches'] = [
+        {
+          'id': 'match-001',
+          'providerId': 497000,
+          'kickoffUtc': '2026-06-11T19:00:00Z',
+        },
+      ];
+      final mapper = FootballDataMapper.fromBaseline(baseline);
+
+      expect(
+        () => mapper.mapMatchesResponse({
+          'matches': [
+            {
+              'id': 497000,
+              'utcDate': '2022-11-20T16:00:00Z',
+              'status': 'FINISHED',
+              'score': {
+                'winner': 'HOME_TEAM',
+                'fullTime': {'home': 2, 'away': 1},
+              },
+              'homeTeam': {'id': 100},
+              'awayTeam': {'id': 200},
+            },
+          ],
+        }),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            allOf(
+              contains('Provider match id 497000'),
+              contains('2022'),
+              contains('2026'),
+            ),
+          ),
+        ),
+      );
+    });
+
     test('throws for unknown football-data status', () {
       final mapper = FootballDataMapper.fromBaseline(_baseline());
 
