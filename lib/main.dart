@@ -257,6 +257,7 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTab.index,
+        backgroundColor: Colors.white,
         onDestinationSelected: (index) {
           setState(() => _selectedTab = TournamentTab.values[index]);
         },
