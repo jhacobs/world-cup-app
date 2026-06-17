@@ -21,6 +21,7 @@ void main() {
       expect(tournament.matches.first.status, MatchStatus.scheduled);
       expect(tournament.matches.first.score, isNull);
       expect(tournament.matches.first.providerId, 497000);
+      expect(tournament.matches.first.fifaMatchNumber, 1);
     });
 
     test('rejects unsupported schema version', () {
@@ -328,6 +329,7 @@ Map<String, Object?> _baselineTournamentJson() {
       {
         'id': 'match-001',
         'providerId': 497000,
+        'fifaMatchNumber': 1,
         'stage': 'group',
         'groupId': 'group-a',
         'kickoffUtc': '2026-06-11T19:00:00Z',

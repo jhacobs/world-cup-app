@@ -9,15 +9,17 @@ import 'src/presentation/tournament_display_mapper.dart';
 import 'src/presentation/tournament_display_models.dart';
 
 typedef TournamentLoader = Future<Tournament> Function();
+typedef CurrentDateProvider = DateTime Function();
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, this.tournamentLoader});
+  const MyApp({super.key, this.tournamentLoader, this.currentDateProvider});
 
   final TournamentLoader? tournamentLoader;
+  final CurrentDateProvider? currentDateProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +38,7 @@ class MyApp extends StatelessWidget {
         fontFamily: 'Roboto',
         navigationBarTheme: NavigationBarThemeData(
           backgroundColor: AppColors.navBackground,
-          indicatorColor: AppColors.navSelected,
+          indicatorColor: Colors.transparent,
           iconTheme: WidgetStateProperty.resolveWith((states) {
             return IconThemeData(
               color: states.contains(WidgetState.selected)
@@ -67,6 +69,7 @@ class MyApp extends StatelessWidget {
       ),
       home: TournamentLoaderPage(
         tournamentLoader: tournamentLoader ?? _defaultTournamentLoader,
+        currentDateProvider: currentDateProvider ?? DateTime.now,
       ),
     );
   }
@@ -81,26 +84,60 @@ class MyApp extends StatelessWidget {
 }
 
 class AppColors {
-  static const background = Colors.white;
-  static const foreground = Color(0xff12311f);
+  static const primary50 = Color(0xfff0fdf4);
+  static const primary100 = Color(0xffdcfce7);
+  static const primary200 = Color(0xffbbf7d0);
+  static const primary300 = Color(0xff86efac);
+  static const primary400 = Color(0xff4ade80);
+  static const primary500 = Color(0xff22c55e);
+  static const primary600 = Color(0xff16a34a);
+  static const primary700 = Color(0xff15803d);
+  static const primary800 = Color(0xff166534);
+  static const primary900 = Color(0xff14532d);
+  static const primary950 = Color(0xff052e16);
+
+  static const accent300 = Color(0xffe54f87);
+  static const accent400 = Color(0xffd42e64);
+  static const accent500 = Color(0xffc42151);
+  static const accent600 = Color(0xff971d3f);
+  static const accent700 = Color(0xff7f1c38);
+  static const accent800 = Color(0xff4d0a1c);
+
+  static const neutral100 = Color(0xfffaf9f7);
+  static const neutral200 = Color(0xffe8e6e1);
+  static const neutral300 = Color(0xffd3cec4);
+  static const neutral400 = Color(0xffb8b2a7);
+  static const neutral500 = Color(0xffa39e93);
+  static const neutral600 = Color(0xff857f72);
+  static const neutral700 = Color(0xff625d52);
+  static const neutral800 = Color(0xff504a40);
+  static const neutral900 = Color(0xff423d33);
+
+  static const background = neutral100;
+  static const foreground = neutral900;
   static const card = Color(0xffffffff);
-  static const primary = Color(0xff16a34a);
-  static const primaryDark = Color(0xff087f3e);
-  static const muted = Color(0xffdcfce7);
-  static const mutedForeground = Color(0xff4b6b58);
-  static const accent = Color(0xffef233c);
-  static const accentSoft = Color(0xffffe3e8);
-  static const navBackground = Colors.white;
-  static const navSelected = accentSoft;
-  static const border = Color(0x3322c55e);
+  static const primary = primary600;
+  static const primaryDark = primary800;
+  static const muted = primary100;
+  static const mutedForeground = neutral600;
+  static const accent = accent500;
+  static const accentSoft = Color(0xffffe8f0);
+  static const navBackground = background;
+  static const border = neutral200;
+  static const primaryBorder = primary200;
 }
 
 enum TournamentTab { matches, groups, knockout }
 
 class TournamentLoaderPage extends StatefulWidget {
-  const TournamentLoaderPage({super.key, required this.tournamentLoader});
+  const TournamentLoaderPage({
+    super.key,
+    required this.tournamentLoader,
+    required this.currentDateProvider,
+  });
 
   final TournamentLoader tournamentLoader;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<TournamentLoaderPage> createState() => _TournamentLoaderPageState();
@@ -126,7 +163,10 @@ class _TournamentLoaderPageState extends State<TournamentLoaderPage> {
         if (snapshot.hasError || !snapshot.hasData) {
           return const TournamentErrorPage();
         }
-        return TournamentHomePage(tournament: snapshot.requireData);
+        return TournamentHomePage(
+          tournament: snapshot.requireData,
+          currentDateProvider: widget.currentDateProvider,
+        );
       },
     );
   }
@@ -159,7 +199,7 @@ class TournamentErrorPage extends StatelessWidget {
                 Icon(Icons.error_outline, color: AppColors.accent, size: 34),
                 SizedBox(height: 12),
                 Text(
-                  'Unable to load tournament data',
+                  'Kan toernooigegevens niet laden',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.foreground,
@@ -169,7 +209,7 @@ class TournamentErrorPage extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  'Check the bundled World Cup data and try again.',
+                  'Controleer de meegeleverde WK-gegevens en probeer opnieuw.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.mutedForeground,
@@ -187,9 +227,14 @@ class TournamentErrorPage extends StatelessWidget {
 }
 
 class TournamentHomePage extends StatefulWidget {
-  const TournamentHomePage({super.key, required this.tournament});
+  const TournamentHomePage({
+    super.key,
+    required this.tournament,
+    required this.currentDateProvider,
+  });
 
   final DisplayTournament tournament;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<TournamentHomePage> createState() => _TournamentHomePageState();
@@ -212,6 +257,7 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedTab.index,
+        backgroundColor: Colors.white,
         onDestinationSelected: (index) {
           setState(() => _selectedTab = TournamentTab.values[index]);
         },
@@ -219,17 +265,17 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
           NavigationDestination(
             icon: Icon(Icons.sports_soccer_outlined),
             selectedIcon: Icon(Icons.sports_soccer),
-            label: 'Matches',
+            label: 'Wedstrijden',
           ),
           NavigationDestination(
             icon: Icon(Icons.table_chart_outlined),
             selectedIcon: Icon(Icons.table_chart),
-            label: 'Groups',
+            label: 'Groepen',
           ),
           NavigationDestination(
             icon: Icon(Icons.emoji_events_outlined),
             selectedIcon: Icon(Icons.emoji_events),
-            label: 'Knockout',
+            label: 'Knock-out',
           ),
         ],
       ),
@@ -238,7 +284,10 @@ class _TournamentHomePageState extends State<TournamentHomePage> {
 
   Widget _buildCurrentTab() {
     return switch (_selectedTab) {
-      TournamentTab.matches => MatchesTab(tournament: widget.tournament),
+      TournamentTab.matches => MatchesTab(
+        tournament: widget.tournament,
+        currentDateProvider: widget.currentDateProvider,
+      ),
       TournamentTab.groups => GroupsTab(groups: widget.tournament.groups),
       TournamentTab.knockout => KnockoutTab(
         matches: widget.tournament.knockoutMatches,
@@ -311,29 +360,47 @@ class TournamentHeader extends StatelessWidget {
 }
 
 class MatchesTab extends StatefulWidget {
-  const MatchesTab({super.key, required this.tournament});
+  const MatchesTab({
+    super.key,
+    required this.tournament,
+    required this.currentDateProvider,
+  });
 
   final DisplayTournament tournament;
+  final CurrentDateProvider currentDateProvider;
 
   @override
   State<MatchesTab> createState() => _MatchesTabState();
 }
 
 class _MatchesTabState extends State<MatchesTab> {
-  var _selectedFilter = 'All';
+  var _selectedFilter = 'Alles';
+  final _scrollController = ScrollController();
+  final _dateGroupKeys = <DateTime, GlobalKey>{};
+  DateTime? _lastAutoScrollTarget;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final filters = widget.tournament.stageFilters;
     if (!filters.contains(_selectedFilter)) {
-      _selectedFilter = 'All';
+      _selectedFilter = 'Alles';
     }
     final filteredMatches = _filterMatches(
       widget.tournament.matches,
       _selectedFilter,
     );
+    final matchGroups = _groupByDate(filteredMatches);
+
+    _scheduleAutoScroll(matchGroups);
 
     return SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -341,27 +408,82 @@ class _MatchesTabState extends State<MatchesTab> {
           FilterChips(
             labels: filters,
             selectedLabel: _selectedFilter,
-            onSelected: (label) => setState(() => _selectedFilter = label),
+            onSelected: (label) {
+              setState(() {
+                _selectedFilter = label;
+                _lastAutoScrollTarget = null;
+              });
+            },
           ),
           const SizedBox(height: 12),
           if (filteredMatches.isEmpty)
             const EmptyState(
               icon: Icons.sports_soccer_outlined,
-              message: 'No matches available',
+              message: 'Geen wedstrijden beschikbaar',
             )
           else
-            for (final group in _groupByDate(filteredMatches))
-              DateMatchGroup(matches: group),
+            for (final group in matchGroups)
+              DateMatchGroup(
+                key: _dateGroupKeys.putIfAbsent(
+                  group.first.localDate,
+                  GlobalKey.new,
+                ),
+                matches: group,
+              ),
         ],
       ),
     );
   }
 
   List<DisplayMatch> _filterMatches(List<DisplayMatch> matches, String filter) {
-    if (filter == 'All') {
+    if (filter == 'Alles') {
       return matches;
     }
     return matches.where((match) => match.stage == filter).toList();
+  }
+
+  void _scheduleAutoScroll(List<List<DisplayMatch>> matchGroups) {
+    final visibleDates = {
+      for (final group in matchGroups)
+        if (group.isNotEmpty) group.first.localDate,
+    };
+    _dateGroupKeys.removeWhere((date, _) => !visibleDates.contains(date));
+
+    final targetDate = _autoScrollTargetDate(matchGroups);
+    if (targetDate == null || targetDate == _lastAutoScrollTarget) {
+      return;
+    }
+    _lastAutoScrollTarget = targetDate;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final targetContext = _dateGroupKeys[targetDate]?.currentContext;
+      if (targetContext == null) {
+        return;
+      }
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        alignment: 0.02,
+      );
+    });
+  }
+
+  DateTime? _autoScrollTargetDate(List<List<DisplayMatch>> matchGroups) {
+    final today = _dateOnly(widget.currentDateProvider());
+    for (final group in matchGroups) {
+      if (group.isEmpty) {
+        continue;
+      }
+      final groupDate = group.first.localDate;
+      if (!groupDate.isBefore(today)) {
+        return groupDate;
+      }
+    }
+    return null;
   }
 }
 
@@ -414,10 +536,14 @@ class FilterChips extends StatelessWidget {
 List<List<DisplayMatch>> _groupByDate(List<DisplayMatch> matches) {
   final groups = <String, List<DisplayMatch>>{};
   for (final match in matches) {
-    final key = '${match.dayOfWeek}|${match.date}';
+    final key = match.localDate.toIso8601String();
     groups.putIfAbsent(key, () => []).add(match);
   }
   return groups.values.toList();
+}
+
+DateTime _dateOnly(DateTime dateTime) {
+  return DateTime(dateTime.year, dateTime.month, dateTime.day);
 }
 
 class DateMatchGroup extends StatelessWidget {
@@ -499,7 +625,7 @@ class DateGroupHeader extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
-            '$count ${count == 1 ? 'match' : 'matches'}',
+            '$count ${count == 1 ? 'wedstrijd' : 'wedstrijden'}',
             style: const TextStyle(
               color: AppColors.accent,
               fontWeight: FontWeight.w700,
@@ -569,10 +695,10 @@ class MatchStatusColumn extends StatelessWidget {
       width: 74,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
       decoration: BoxDecoration(
-        color: match.isCompleted ? AppColors.accentSoft : AppColors.muted,
+        color: match.isCompleted ? AppColors.neutral200 : AppColors.muted,
         border: Border(
           right: BorderSide(
-            color: match.isCompleted ? AppColors.accent : AppColors.primary,
+            color: match.isCompleted ? AppColors.neutral300 : AppColors.primary,
           ),
         ),
       ),
@@ -584,19 +710,17 @@ class MatchStatusColumn extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: match.isCompleted
-                  ? AppColors.accent
-                  : AppColors.foreground,
+                  ? AppColors.foreground
+                  : AppColors.primaryDark,
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            match.isCompleted ? 'Final' : 'Kickoff',
-            style: TextStyle(
-              color: match.isCompleted
-                  ? AppColors.accent
-                  : AppColors.mutedForeground,
+            match.isCompleted ? 'Einde' : 'Aftrap',
+            style: const TextStyle(
+              color: AppColors.mutedForeground,
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -616,16 +740,16 @@ class MatchMetaRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final groupLabel = match.group == null
         ? _shortStageLabel(match.stage)
-        : 'Group ${match.group}';
+        : 'Groep ${match.group}';
     return Row(children: [StageBadge(label: groupLabel)]);
   }
 
   String _shortStageLabel(String stage) {
     return switch (stage) {
-      'Round of 32' => 'R32',
-      'Round of 16' => 'R16',
-      'Quarter-finals' => 'QF',
-      'Semi-finals' => 'SF',
+      'Ronde van 32' => 'R32',
+      'Achtste finales' => 'R16',
+      'Kwartfinales' => 'QF',
+      'Halve finales' => 'SF',
       _ => stage,
     };
   }
@@ -706,17 +830,15 @@ class MatchCenterScore extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 74),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: match.isCompleted ? AppColors.accentSoft : AppColors.muted,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: match.isCompleted ? AppColors.accent : AppColors.border,
-        ),
+        border: Border.all(color: AppColors.primary),
       ),
       child: Text(
         match.resultText,
         textAlign: TextAlign.center,
         style: TextStyle(
-          color: match.isCompleted ? AppColors.accent : AppColors.primaryDark,
+          color: AppColors.primary,
           fontSize: match.isCompleted ? 18 : 15,
           fontWeight: FontWeight.w900,
         ),
@@ -811,7 +933,7 @@ class GroupsTab extends StatelessWidget {
           if (groups.isEmpty)
             const EmptyState(
               icon: Icons.table_chart_outlined,
-              message: 'No groups available',
+              message: 'Geen groepen beschikbaar',
             )
           else
             for (final group in groups) ...[
@@ -844,7 +966,7 @@ class GroupTable extends StatelessWidget {
                 StageBadge(label: group.name),
                 const SizedBox(width: 8),
                 const Text(
-                  'Standings',
+                  'Stand',
                   style: TextStyle(
                     color: AppColors.mutedForeground,
                     fontSize: 12,
@@ -882,12 +1004,12 @@ class _StandingHeader extends StatelessWidget {
               ),
             ),
           ),
-          StandingCell(label: 'P', isHeader: true),
+          StandingCell(label: 'GS', isHeader: true),
           StandingCell(label: 'W', isHeader: true),
-          StandingCell(label: 'D', isHeader: true),
-          StandingCell(label: 'L', isHeader: true),
-          StandingCell(label: 'GD', isHeader: true),
-          StandingCell(label: 'Pts', isHeader: true),
+          StandingCell(label: 'G', isHeader: true),
+          StandingCell(label: 'V', isHeader: true),
+          StandingCell(label: 'DS', isHeader: true),
+          StandingCell(label: 'Ptn', isHeader: true),
         ],
       ),
     );
@@ -1002,7 +1124,7 @@ class QualificationNote extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Top 2 per group qualify. Best third-place teams advance.',
+              'De top 2 per groep plaatst zich. De beste nummers drie gaan door.',
               style: TextStyle(
                 color: AppColors.mutedForeground,
                 fontSize: 12,
@@ -1029,7 +1151,7 @@ class KnockoutTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text(
-            'Knockout bracket',
+            'Knock-outschema',
             style: TextStyle(
               color: AppColors.foreground,
               fontSize: 18,
@@ -1038,7 +1160,7 @@ class KnockoutTab extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           const Text(
-            'Swipe sideways to follow each round.',
+            'Veeg opzij om elke ronde te volgen.',
             style: TextStyle(
               color: AppColors.mutedForeground,
               fontSize: 12,
@@ -1049,7 +1171,7 @@ class KnockoutTab extends StatelessWidget {
           if (matches.isEmpty)
             const EmptyState(
               icon: Icons.emoji_events_outlined,
-              message: 'No knockout matches available',
+              message: 'Geen knock-outwedstrijden beschikbaar',
             )
           else
             SingleChildScrollView(
@@ -1100,13 +1222,13 @@ class BracketTree extends StatelessWidget {
 }
 
 const _knockoutStages = [
-  'Round of 32',
-  'Round of 16',
-  'Quarter-finals',
-  'Semi-finals',
-  '3rd Place',
-  'Final',
-  'Knockout',
+  'Ronde van 32',
+  'Achtste finales',
+  'Kwartfinales',
+  'Halve finales',
+  '3e plaats',
+  'Finale',
+  'Knock-out',
 ];
 
 class BracketRoundColumn extends StatelessWidget {
@@ -1146,34 +1268,20 @@ class BracketRoundHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isFinal = stage == 'Final';
-    final isPlacement = stage == '3rd Place';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isFinal
-            ? AppColors.accent
-            : isPlacement
-            ? AppColors.accentSoft
-            : AppColors.card,
-        borderRadius: BorderRadius.circular(isFinal || isPlacement ? 8 : 18),
-        border: Border.all(
-          color: isFinal || isPlacement ? AppColors.accent : AppColors.border,
-        ),
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
       ),
       child: Text(
         stage,
         textAlign: TextAlign.center,
-        style: TextStyle(
-          color: isFinal
-              ? Colors.white
-              : isPlacement
-              ? AppColors.accent
-              : AppColors.mutedForeground,
+        style: const TextStyle(
+          color: AppColors.mutedForeground,
           fontSize: 12,
-          fontWeight: isFinal || isPlacement
-              ? FontWeight.w900
-              : FontWeight.w700,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );
@@ -1204,9 +1312,7 @@ class BracketMatchCard extends StatelessWidget {
               Container(
                 height: 4,
                 decoration: BoxDecoration(
-                  color: match.stage == 'Final'
-                      ? AppColors.accent
-                      : AppColors.primary,
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -1215,10 +1321,8 @@ class BracketMatchCard extends StatelessWidget {
                 children: [
                   Text(
                     match.date,
-                    style: TextStyle(
-                      color: match.stage == 'Final'
-                          ? AppColors.accent
-                          : AppColors.mutedForeground,
+                    style: const TextStyle(
+                      color: AppColors.mutedForeground,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1228,7 +1332,7 @@ class BracketMatchCard extends StatelessWidget {
                     match.isCompleted ? 'FT' : match.time,
                     style: TextStyle(
                       color: match.isCompleted
-                          ? AppColors.accent
+                          ? AppColors.primary
                           : AppColors.primaryDark,
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
@@ -1270,18 +1374,66 @@ class BracketTeamLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qualifierLabel = team.isProjected ? team.qualifierLabel : null;
     return Row(
       children: [
         Expanded(
-          child: Text(
-            team.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppColors.foreground,
-              fontSize: 12,
-              fontWeight: isWinner ? FontWeight.w900 : FontWeight.w700,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      team.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.foreground,
+                        fontSize: 12,
+                        fontWeight: isWinner
+                            ? FontWeight.w900
+                            : FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (team.projectionUncertain) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Voorlopig',
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (qualifierLabel != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  qualifierLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.mutedForeground,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         if (score != null) ...[
@@ -1331,7 +1483,7 @@ class MatchDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Match detail'),
+        title: const Text('Wedstrijddetail'),
         backgroundColor: AppColors.background,
       ),
       body: SafeArea(
@@ -1347,7 +1499,7 @@ class MatchDetailPage extends StatelessWidget {
                     StageBadge(
                       label: match.group == null
                           ? match.stage
-                          : 'Group ${match.group}',
+                          : 'Groep ${match.group}',
                     ),
                     const SizedBox(height: 18),
                     Text(
@@ -1361,7 +1513,7 @@ class MatchDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      match.isCompleted ? 'Final score' : 'Scheduled kickoff',
+                      match.isCompleted ? 'Eindstand' : 'Geplande aftrap',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: AppColors.mutedForeground,

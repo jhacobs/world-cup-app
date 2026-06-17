@@ -19,19 +19,31 @@ class DisplayTournament {
 }
 
 class DisplayTeam {
-  const DisplayTeam({required this.id, required this.name, required this.code});
+  const DisplayTeam({
+    required this.id,
+    required this.name,
+    required this.code,
+    this.qualifierLabel,
+    this.isProjected = false,
+    this.projectionUncertain = false,
+  });
 
   final String id;
   final String name;
   final String code;
+  final String? qualifierLabel;
+  final bool isProjected;
+  final bool projectionUncertain;
 }
 
 class DisplayMatch {
   const DisplayMatch({
     required this.id,
+    this.fifaMatchNumber,
     required this.stage,
     required this.isKnockout,
     this.group,
+    required this.localDate,
     required this.date,
     required this.dayOfWeek,
     required this.time,
@@ -44,9 +56,11 @@ class DisplayMatch {
   });
 
   final String id;
+  final int? fifaMatchNumber;
   final String stage;
   final bool isKnockout;
   final String? group;
+  final DateTime localDate;
   final String date;
   final String dayOfWeek;
   final String time;
@@ -66,7 +80,7 @@ class DisplayMatch {
 
   String get detailResultText {
     if (!isCompleted || homeScore == null || awayScore == null) {
-      return '${home.name} vs ${away.name}';
+      return '${home.name} tegen ${away.name}';
     }
     return '${home.name} $homeScore - $awayScore ${away.name}';
   }
