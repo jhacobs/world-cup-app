@@ -19,16 +19,27 @@ class DisplayTournament {
 }
 
 class DisplayTeam {
-  const DisplayTeam({required this.id, required this.name, required this.code});
+  const DisplayTeam({
+    required this.id,
+    required this.name,
+    required this.code,
+    this.qualifierLabel,
+    this.isProjected = false,
+    this.projectionUncertain = false,
+  });
 
   final String id;
   final String name;
   final String code;
+  final String? qualifierLabel;
+  final bool isProjected;
+  final bool projectionUncertain;
 }
 
 class DisplayMatch {
   const DisplayMatch({
     required this.id,
+    this.fifaMatchNumber,
     required this.stage,
     required this.isKnockout,
     this.group,
@@ -45,6 +56,7 @@ class DisplayMatch {
   });
 
   final String id;
+  final int? fifaMatchNumber;
   final String stage;
   final bool isKnockout;
   final String? group;

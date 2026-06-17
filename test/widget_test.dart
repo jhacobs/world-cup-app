@@ -267,6 +267,57 @@ void main() {
     expect(label.style?.fontWeight, FontWeight.w700);
   });
 
+  testWidgets('bracket team line shows projected qualifier label', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: BracketTeamLine(
+            team: DisplayTeam(
+              id: 'mexico',
+              name: 'Mexico',
+              code: 'MEX',
+              qualifierLabel: 'Winnaar groep A',
+              isProjected: true,
+            ),
+            score: null,
+            isWinner: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Mexico'), findsOneWidget);
+    expect(find.text('Winnaar groep A'), findsOneWidget);
+  });
+
+  testWidgets('bracket team line marks uncertain projections', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: BracketTeamLine(
+            team: DisplayTeam(
+              id: 'canada',
+              name: 'Canada',
+              code: 'CAN',
+              qualifierLabel: 'Beste nummer 3 groep A/B/C/D/F',
+              isProjected: true,
+              projectionUncertain: true,
+            ),
+            score: null,
+            isWinner: false,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Canada'), findsOneWidget);
+    expect(find.text('Voorlopig'), findsOneWidget);
+  });
+
   testWidgets('final and third place round headers match other rounds', (
     WidgetTester tester,
   ) async {

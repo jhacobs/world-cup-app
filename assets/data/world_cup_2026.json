@@ -1656,6 +1656,7 @@
     {
       "id": "round-32-01",
       "providerId": 537417,
+      "fifaMatchNumber": 73,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-28T19:00:00Z",
@@ -1671,6 +1672,7 @@
     {
       "id": "round-32-02",
       "providerId": 537423,
+      "fifaMatchNumber": 74,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-29T17:00:00Z",
@@ -1686,6 +1688,7 @@
     {
       "id": "round-32-03",
       "providerId": 537415,
+      "fifaMatchNumber": 75,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-29T20:30:00Z",
@@ -1701,6 +1704,7 @@
     {
       "id": "round-32-04",
       "providerId": 537418,
+      "fifaMatchNumber": 76,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-30T01:00:00Z",
@@ -1716,6 +1720,7 @@
     {
       "id": "round-32-05",
       "providerId": 537424,
+      "fifaMatchNumber": 77,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-30T17:00:00Z",
@@ -1731,6 +1736,7 @@
     {
       "id": "round-32-06",
       "providerId": 537416,
+      "fifaMatchNumber": 78,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-06-30T21:00:00Z",
@@ -1746,6 +1752,7 @@
     {
       "id": "round-32-07",
       "providerId": 537425,
+      "fifaMatchNumber": 79,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-01T01:00:00Z",
@@ -1761,6 +1768,7 @@
     {
       "id": "round-32-08",
       "providerId": 537426,
+      "fifaMatchNumber": 80,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-01T16:00:00Z",
@@ -1776,6 +1784,7 @@
     {
       "id": "round-32-09",
       "providerId": 537422,
+      "fifaMatchNumber": 81,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-01T20:00:00Z",
@@ -1791,6 +1800,7 @@
     {
       "id": "round-32-10",
       "providerId": 537421,
+      "fifaMatchNumber": 82,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-02T00:00:00Z",
@@ -1806,6 +1816,7 @@
     {
       "id": "round-32-11",
       "providerId": 537420,
+      "fifaMatchNumber": 83,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-02T19:00:00Z",
@@ -1821,6 +1832,7 @@
     {
       "id": "round-32-12",
       "providerId": 537419,
+      "fifaMatchNumber": 84,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-02T23:00:00Z",
@@ -1836,6 +1848,7 @@
     {
       "id": "round-32-13",
       "providerId": 537429,
+      "fifaMatchNumber": 85,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-03T03:00:00Z",
@@ -1851,6 +1864,7 @@
     {
       "id": "round-32-14",
       "providerId": 537428,
+      "fifaMatchNumber": 86,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-03T18:00:00Z",
@@ -1866,6 +1880,7 @@
     {
       "id": "round-32-15",
       "providerId": 537427,
+      "fifaMatchNumber": 87,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-03T22:00:00Z",
@@ -1881,6 +1896,7 @@
     {
       "id": "round-32-16",
       "providerId": 537430,
+      "fifaMatchNumber": 88,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-04T01:30:00Z",
@@ -1896,6 +1912,7 @@
     {
       "id": "round-16-01",
       "providerId": 537376,
+      "fifaMatchNumber": 89,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-04T17:00:00Z",
@@ -1911,6 +1928,7 @@
     {
       "id": "round-16-02",
       "providerId": 537375,
+      "fifaMatchNumber": 90,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-04T21:00:00Z",
@@ -1926,6 +1944,7 @@
     {
       "id": "round-16-03",
       "providerId": 537377,
+      "fifaMatchNumber": 91,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-05T20:00:00Z",
@@ -1941,6 +1960,7 @@
     {
       "id": "round-16-04",
       "providerId": 537378,
+      "fifaMatchNumber": 92,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-06T00:00:00Z",
@@ -1956,6 +1976,7 @@
     {
       "id": "round-16-05",
       "providerId": 537379,
+      "fifaMatchNumber": 93,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-06T19:00:00Z",
@@ -1971,6 +1992,7 @@
     {
       "id": "round-16-06",
       "providerId": 537380,
+      "fifaMatchNumber": 94,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-07T00:00:00Z",
@@ -1986,6 +2008,7 @@
     {
       "id": "round-16-07",
       "providerId": 537381,
+      "fifaMatchNumber": 95,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-07T16:00:00Z",
@@ -2001,6 +2024,7 @@
     {
       "id": "round-16-08",
       "providerId": 537382,
+      "fifaMatchNumber": 96,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-07T20:00:00Z",
@@ -2016,6 +2040,7 @@
     {
       "id": "quarter-final-01",
       "providerId": 537383,
+      "fifaMatchNumber": 97,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-09T20:00:00Z",
@@ -2031,6 +2056,7 @@
     {
       "id": "quarter-final-02",
       "providerId": 537384,
+      "fifaMatchNumber": 98,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-10T19:00:00Z",
@@ -2046,6 +2072,7 @@
     {
       "id": "quarter-final-03",
       "providerId": 537385,
+      "fifaMatchNumber": 99,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-11T21:00:00Z",
@@ -2061,6 +2088,7 @@
     {
       "id": "quarter-final-04",
       "providerId": 537386,
+      "fifaMatchNumber": 100,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-12T01:00:00Z",
@@ -2076,6 +2104,7 @@
     {
       "id": "semi-final-01",
       "providerId": 537387,
+      "fifaMatchNumber": 101,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-14T19:00:00Z",
@@ -2091,6 +2120,7 @@
     {
       "id": "semi-final-02",
       "providerId": 537388,
+      "fifaMatchNumber": 102,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-15T19:00:00Z",
@@ -2106,6 +2136,7 @@
     {
       "id": "third-place",
       "providerId": 537389,
+      "fifaMatchNumber": 103,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-18T21:00:00Z",
@@ -2121,6 +2152,7 @@
     {
       "id": "final",
       "providerId": 537390,
+      "fifaMatchNumber": 104,
       "stage": "knockout",
       "groupId": null,
       "kickoffUtc": "2026-07-19T19:00:00Z",

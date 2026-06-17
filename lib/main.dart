@@ -1373,18 +1373,66 @@ class BracketTeamLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final qualifierLabel = team.isProjected ? team.qualifierLabel : null;
     return Row(
       children: [
         Expanded(
-          child: Text(
-            team.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: AppColors.foreground,
-              fontSize: 12,
-              fontWeight: isWinner ? FontWeight.w900 : FontWeight.w700,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      team.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.foreground,
+                        fontSize: 12,
+                        fontWeight: isWinner
+                            ? FontWeight.w900
+                            : FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (team.projectionUncertain) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.accentSoft,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'Voorlopig',
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 8,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (qualifierLabel != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  qualifierLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.mutedForeground,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
         if (score != null) ...[

@@ -229,6 +229,7 @@ class Match {
   const Match({
     required this.id,
     this.providerId,
+    this.fifaMatchNumber,
     required this.stage,
     this.groupId,
     required this.kickoffUtc,
@@ -246,6 +247,7 @@ class Match {
     return Match(
       id: _requiredString(json, 'id'),
       providerId: _optionalInt(json, 'providerId'),
+      fifaMatchNumber: _optionalInt(json, 'fifaMatchNumber'),
       stage: TournamentStage.fromJson(_requiredString(json, 'stage')),
       groupId: _optionalString(json, 'groupId'),
       kickoffUtc: _requiredDateTimeUtc(json, 'kickoffUtc'),
@@ -262,6 +264,7 @@ class Match {
 
   final String id;
   final int? providerId;
+  final int? fifaMatchNumber;
   final TournamentStage stage;
   final String? groupId;
   final DateTime kickoffUtc;
@@ -284,6 +287,7 @@ class Match {
     return Match(
       id: id,
       providerId: _copyWithNullable<int>(providerId, this.providerId),
+      fifaMatchNumber: fifaMatchNumber,
       stage: stage,
       groupId: groupId,
       kickoffUtc: kickoffUtc,
