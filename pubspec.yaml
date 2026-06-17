@@ -59,6 +59,7 @@ flutter:
 
   assets:
     - assets/data/world_cup_2026.json
+    - assets/branding/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

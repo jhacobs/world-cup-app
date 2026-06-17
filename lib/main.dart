@@ -178,7 +178,12 @@ class LoadingTournamentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: SafeArea(child: Center(child: CircularProgressIndicator())),
+      body: SizedBox.expand(
+        child: Image(
+          image: AssetImage('assets/branding/splash-screen.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
     );
   }
 }

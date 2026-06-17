@@ -38,13 +38,19 @@ void main() {
 
     await tester.pumpWidget(MyApp(tournamentLoader: () => completer.future));
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    expect(
+      find.image(const AssetImage('assets/branding/splash-screen.png')),
+      findsOneWidget,
+    );
     expect(find.text('World Cup 2026'), findsNothing);
 
     completer.complete(_baselineTournament());
     await tester.pumpAndSettle();
 
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      find.image(const AssetImage('assets/branding/splash-screen.png')),
+      findsNothing,
+    );
     expect(find.text('World Cup 2026'), findsOneWidget);
   });
 
